@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Modifier' if record else 'Ajouter' }} Maintenance{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>{{ 'Modifier' if record else 'Ajouter' }} un Registre de Maintenance</h2>
+        <a href="{{ url_for('maintenance') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="device_id" class="form-label">Appareil*</label>
+                        <select class="form-select" id="device_id" name="device_id" required 
+                                {{ 'disabled' if device_id else '' }}>
+                            <option value="">Sélectionner...</option>
+                            {% for d in devices %}
+                            <option value="{{ d.id }}" 
+                                    {{ 'selected' if (record and record.device_id == d.id) or device_id == d.id }}>
+                                {{ d.name }} ({{ d.serial_number }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        {% if device_id %}
+                        <input type="hidden" name="device_id" value="{{ device_id }}">
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="technician" class="form-label">Technicien*</label>
+                        <input type="text" list="technicians" class="form-control" id="technician" 
+                               name="technician" value="{{ record.technician if record else '' }}" required>
+                        <datalist id="technicians">
+                            {% for t in technicians %}
+                            <option value="{{ t }}">
+                            {% endfor %}
+                        </datalist>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="maintenance_date" class="form-label">Date de Maintenance*</label>
+                        <input type="date" class="form-control" id="maintenance_date" name="maintenance_date"
+                               value="{{ record.maintenance_date if record else today }}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="status" class="form-label">Statut*</label>
+                        <select class="form-select" id="status" name="status" required>
+                            <option value="en attente" {{ 'selected' if record and record.status == 'en attente' }}>En Attente</option>
+                            <option value="en cours" {{ 'selected' if record and record.status == 'en cours' }}>En Cours</option>
+                            <option value="terminé" {{ 'selected' if record and record.status == 'terminé' }}>Terminé</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="issue_description" class="form-label">Description du Problème*</label>
+                    <textarea class="form-control" id="issue_description" name="issue_description" 
+                              rows="3" required>{{ record.issue_description if record else '' }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="actions_taken" class="form-label">Actions Effectuées</label>
+                    <textarea class="form-control" id="actions_taken" name="actions_taken" 
+                              rows="3">{{ record.actions_taken if record else '' }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="completion_date" class="form-label">Date d'Achèvement</label>
+                    <input type="date" class="form-control" id="completion_date" name="completion_date"
+                           value="{{ record.completion_date if record else '' }}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="notes" class="form-label">Notes</label>
+                    <textarea class="form-control" id="notes" name="notes" 
+                              rows="3">{{ record.notes if record else '' }}</textarea>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('maintenance') }}" class="btn btn-secondary">Annuler</a>
+                    <button type="submit" class="btn btn-primary">
+                        {{ 'Modifier' if record else 'Ajouter' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

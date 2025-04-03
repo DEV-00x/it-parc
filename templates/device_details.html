@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Détails de l'Appareil{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>{{ device.name }}</h2>
+        <div>
+            <a href="{{ url_for('devices') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+            <a href="{{ url_for('edit_device', device_id=device.id) }}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Modifier
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Informations de l'Appareil</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <tr><th>Type:</th><td>{{ device.type }}</td></tr>
+                        <tr><th>N° Série:</th><td>{{ device.serial_number }}</td></tr>
+                        <tr><th>Statut:</th>
+                            <td><span class="badge bg-{{ 'success' if device.status == 'actif' else 'warning' if device.status == 'en maintenance' else 'danger' }}">
+                                {{ device.status }}
+                            </span></td>
+                        </tr>
+                        <tr><th>Assigné à:</th><td>{{ device.assigned_to or '-' }}</td></tr>
+                        <tr><th>Service:</th><td>{{ device.service or '-' }}</td></tr>
+                        <tr><th>Département:</th><td>{{ device.department or '-' }}</td></tr>
+                        <tr><th>Adresse MAC:</th><td>{{ device.mac_address or '-' }}</td></tr>
+                        <tr><th>Notes:</th><td>{{ device.notes or '-' }}</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Historique des Propriétaires</h5>
+                    <a href="{{ url_for('ownership_history', device_id=device.id) }}" class="btn btn-sm btn-info">
+                        Voir tout
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Ancien</th>
+                                    <th>Nouveau</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for change in device.ownership_changes[:5] %}
+                                <tr>
+                                    <td>{{ change.change_date.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ change.previous_owner }}</td>
+                                    <td>{{ change.new_owner }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5>Registres de Maintenance</h5>
+            <a href="{{ url_for('add_maintenance', device_id=device.id) }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nouvelle Maintenance
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Référence</th>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Statut</th>
+                            <th>Technicien</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in maintenance_records %}
+                        <tr>
+                            <td>{{ record.reference }}</td>
+                            <td>{{ record.maintenance_date.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ record.issue_description[:50] }}...</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if record.status == 'terminé' else 'warning' if record.status == 'en cours' else 'secondary' }}">
+                                    {{ record.status }}
+                                </span>
+                            </td>
+                            <td>{{ record.technician }}</td>
+                            <td>
+                                <a href="{{ url_for('print_maintenance', record_id=record.id) }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-print"></i>
+                                </a>
+                                <a href="{{ url_for('edit_maintenance', record_id=record.id) }}" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('delete_maintenance', record_id=record.id) }}" class="btn btn-sm btn-danger delete-confirm">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

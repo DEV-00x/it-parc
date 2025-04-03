@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Page Non Trouvée{% endblock %}
+
+{% block content %}
+<div class="container mt-5 text-center">
+    <div class="card">
+        <div class="card-body">
+            <h1 class="display-1">404</h1>
+            <h3 class="mb-4">Page Non Trouvée</h3>
+            <p class="mb-4">La page que vous recherchez n'existe pas ou a été déplacée.</p>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                <i class="fas fa-home"></i> Retour à l'accueil
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Tableau de Bord{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Tableau de Bord</h2>
+    
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5>Total Appareils</h5>
+                    <h2>{{ total_devices }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>Actifs</h5>
+                    <h2>{{ active_devices }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning">
+                <div class="card-body">
+                    <h5>En Maintenance</h5>
+                    <h2>{{ maintenance_devices }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5>Inactifs</h5>
+                    <h2>{{ inactive_devices }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Derniers Appareils Ajoutés</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for device in recent_devices %}
+                        <a href="{{ url_for('device_details', device_id=device.id) }}" 
+                           class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ device.name }}</h6>
+                                    <small>{{ device.type }} - {{ device.serial_number }}</small>
+                                </div>
+                                <span class="badge bg-{{ 'success' if device.status == 'actif' 
+                                                       else 'warning' if device.status == 'en maintenance' 
+                                                       else 'danger' }}">
+                                    {{ device.status }}
+                                </span>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Dernières Maintenances</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for record in recent_maintenance %}
+                        <a href="{{ url_for('device_details', device_id=record.device_id) }}" 
+                           class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ record.device.name }}</h6>
+                                    <small>{{ record.maintenance_date.strftime('%d/%m/%Y') }} - {{ record.technician }}</small>
+                                </div>
+                                <span class="badge bg-{{ 'success' if record.status == 'terminé' 
+                                                       else 'warning' if record.status == 'en cours' 
+                                                       else 'secondary' }}">
+                                    {{ record.status }}
+                                </span>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

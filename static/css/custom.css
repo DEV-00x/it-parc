@@ -1,0 +1,36 @@
+/* Custom styles */
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+.badge {
+    font-size: 0.875rem;
+}
+
+.table th {
+    background-color: #f8f9fa;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.btn-icon {
+    padding: 0.25rem 0.5rem;
+}
+
+.signature-box {
+    background-color: #fff;
+}
+
+@media print {
+    .signature-box {
+        border: 1px solid #000 !important;
+        print-color-adjust: exact;
+    }
+}

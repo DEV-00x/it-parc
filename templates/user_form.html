@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Modifier' if user else 'Ajouter' }} Utilisateur{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>{{ 'Modifier' if user else 'Ajouter' }} un Utilisateur</h2>
+        <a href="{{ url_for('users') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Nom d'utilisateur*</label>
+                    <input type="text" class="form-control" id="username" name="username"
+                           value="{{ user.username if user else '' }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">
+                        {{ 'Nouveau mot de passe (laisser vide pour ne pas changer)' if user else 'Mot de passe*' }}
+                    </label>
+                    <input type="password" class="form-control" id="password" name="password"
+                           {{ '' if user else 'required' }}>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="is_admin" name="is_admin"
+                           {{ 'checked' if user and user.is_admin }}>
+                    <label class="form-check-label" for="is_admin">Administrateur</label>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('users') }}" class="btn btn-secondary">Annuler</a>
+                    <button type="submit" class="btn btn-primary">
+                        {{ 'Modifier' if user else 'Ajouter' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
