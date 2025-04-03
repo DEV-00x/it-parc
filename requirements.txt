@@ -7,4 +7,6 @@ pdfkit==1.0.0
 gunicorn
 numpy==1.24.3
 Flask-Migrate
-
+flask_login
+flask
+gunicorn
