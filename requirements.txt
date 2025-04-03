@@ -10,3 +10,4 @@ Flask-Migrate
 flask_login
 flask
 gunicorn
+openpyxl
