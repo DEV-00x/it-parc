@@ -1,139 +1,96 @@
+/* Main Styles */
 body {
-    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* Card styling */
 .card {
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: all 0.3s;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: all 0.3s ease;
 }
 
 .card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
-.table-hover tbody tr:hover {
-    background-color: rgba(0,0,0,0.05);
+.card-header {
+    background-color: rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
 }
 
-.stats-card {
-    transition: transform 0.2s;
-}
-
-.stats-card:hover {
-    transform: translateY(-5px);
-}
-
-.form-select:hover {
-    border-color: #0d6efd;
-}
-
+/* Button styling */
 .btn {
-    transition: all 0.3s;
-}
-
-.btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-.table tbody tr {
+    border-radius: 0.25rem;
     transition: all 0.2s;
 }
 
-.table tbody tr:hover {
-    background-color: rgba(13, 110, 253, 0.05);
-    cursor: pointer;
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
 }
 
-.form-control:focus {
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
 }
 
-.alert {
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-    animation: slideIn 0.5s ease-out;
+/* Table styling */
+.table {
+    vertical-align: middle;
 }
 
-@keyframes slideIn {
-    from {
-        transform: translateY(-100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.04);
 }
 
-@media print {
-    .no-print {
-        display: none;
-    }
+/* Dashboard cards */
+.dashboard-card {
+    border-radius: 0.5rem;
+    transition: transform 0.3s ease;
 }
 
-/* تحسين شريط التنقل */
-.navbar {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.dashboard-card:hover {
+    transform: translateY(-5px);
 }
 
-.navbar-brand i,
-.nav-link i {
-    margin-right: 0.5rem;
+/* Form controls */
+.form-control, .form-select {
+    border-radius: 0.25rem;
 }
 
-/* تحسين حقول البحث */
-.input-group {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+.form-control:focus, .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
-.input-group-text {
-    background-color: #fff;
-    border-right: none;
+/* Badge styling */
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
 }
 
-#tableFilter {
-    border-left: none;
-}
-
-#tableFilter:focus {
-    box-shadow: none;
-}
-
-/* تحسين الجداول */
-.table th {
+/* Signature box */
+.signature-box {
+    border: 1px solid #dee2e6;
+    height: 100px;
+    margin-top: 10px;
+    padding: 10px;
     background-color: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
 }
 
-/* تحسين الأزرار */
-.btn i {
-    margin-right: 0.3rem;
+/* Responsive tables */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
-/* تأثيرات التحميل */
-.loading {
-    position: relative;
-    opacity: 0.6;
+/* Custom animations */
+.fade-in {
+    animation: fadeIn 0.5s;
 }
 
-.loading::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 2rem;
-    height: 2rem;
-    margin: -1rem 0 0 -1rem;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #3498db;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }

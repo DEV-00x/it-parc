@@ -2,64 +2,171 @@
 {% block title %}Import des Appareils{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Importer des Appareils</h2>
-        <a href="{{ url_for('export_devices_excel') }}?template=true" class="btn btn-info">
-            <i class="fas fa-download"></i> Télécharger le Modèle
-        </a>
+<div class="container-fluid py-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <h2 class="mb-0"><i class="fas fa-file-import me-2"></i>Importer des Appareils</h2>
+        <div class="btn-toolbar gap-2">
+            <a href="{{ url_for('export_devices_excel') }}?template=true" class="btn btn-sm btn-outline-info">
+                <i class="fas fa-download me-1"></i> Télécharger le Modèle
+            </a>
+            <a href="{{ url_for('devices') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Retour
+            </a>
+        </div>
     </div>
     
-    <div class="card">
+    <div class="card shadow-sm border-0">
         <div class="card-body">
-            <div class="alert alert-info mb-3">
-                <h5><i class="fas fa-info-circle"></i> Instructions</h5>
-                <p>1. Téléchargez le modèle Excel</p>
-                <p>2. Remplissez les données selon le format</p>
-                <p>3. Importez le fichier complété</p>
-                
-                <hr>
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Colonnes requises:</h6>
-                        <ul class="list-unstyled">
-                            <li><i class="fas fa-check text-success"></i> name (Nom)</li>
-                            <li><i class="fas fa-check text-success"></i> type (Type)</li>
-                            <li><i class="fas fa-check text-success"></i> serial_number (Numéro de série)</li>
-                        </ul>
+            <div class="alert alert-info border-0 shadow-sm">
+                <div class="d-flex">
+                    <div class="me-3">
+                        <i class="fas fa-info-circle fa-2x"></i>
                     </div>
-                    <div class="col-md-6">
-                        <h6>Colonnes optionnelles:</h6>
-                        <ul class="list-unstyled">
-                            <li><i class="fas fa-minus text-muted"></i> status</li>
-                            <li><i class="fas fa-minus text-muted"></i> assigned_to</li>
-                            <li><i class="fas fa-minus text-muted"></i> service</li>
-                            <li><i class="fas fa-minus text-muted"></i> department</li>
-                            <li><i class="fas fa-minus text-muted"></i> mac_address</li>
-                            <li><i class="fas fa-minus text-muted"></i> notes</li>
-                        </ul>
+                    <div>
+                        <h5 class="alert-heading">Instructions</h5>
+                        <p>Pour importer des appareils, veuillez suivre ces étapes:</p>
+                        <ol>
+                            <li>Téléchargez le modèle Excel en cliquant sur le bouton ci-dessus</li>
+                            <li>Remplissez le fichier avec les informations des appareils</li>
+                            <li>Enregistrez le fichier et importez-le ci-dessous</li>
+                        </ol>
+                        <p class="mb-0"><strong>Note:</strong> Les champs marqués d'un astérisque (*) dans le modèle sont obligatoires.</p>
                     </div>
                 </div>
             </div>
-
-            <form method="POST" enctype="multipart/form-data">
-                <div class="mb-3">
-                    <label for="file" class="form-label">Fichier Excel (.xlsx)</label>
-                    <input type="file" class="form-control" id="file" name="file" 
-                           accept=".xlsx" required>
+            
+            <form method="POST" enctype="multipart/form-data" class="mt-4">
+                <div class="mb-4">
+                    <label for="file" class="form-label fw-bold">Fichier Excel (.xlsx)</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="fas fa-file-excel"></i></span>
+                        <input type="file" class="form-control" id="file" name="file" accept=".xlsx" required>
+                    </div>
+                    <div class="form-text">Seuls les fichiers Excel (.xlsx) sont acceptés</div>
                 </div>
                 
-                <div class="d-flex justify-content-end gap-2">
-                    <a href="{{ url_for('devices') }}" class="btn btn-secondary">
-                        <i class="fas fa-times"></i> Annuler
+                <div class="form-check form-switch mb-4">
+                    <input class="form-check-input" type="checkbox" id="update_existing" name="update_existing">
+                    <label class="form-check-label" for="update_existing">
+                        Mettre à jour les appareils existants (basé sur le numéro de série)
+                    </label>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('devices') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i> Annuler
                     </a>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-upload"></i> Importer
+                        <i class="fas fa-upload me-1"></i> Importer
                     </button>
                 </div>
             </form>
         </div>
     </div>
+    
+    <div class="card mt-4 shadow-sm border-0">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-question-circle me-2"></i>Aide</h5>
+        </div>
+        <div class="card-body">
+            <div class="accordion" id="importHelp">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                            Format du fichier Excel
+                        </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#importHelp">
+                        <div class="accordion-body">
+                            <p>Le fichier Excel doit contenir les colonnes suivantes:</p>
+                            <ul>
+                                <li><strong>Nom*</strong> - Nom de l'appareil</li>
+                                <li><strong>Type*</strong> - Type d'appareil (Ordinateur, Imprimante, etc.)</li>
+                                <li><strong>Numéro de série*</strong> - Numéro de série unique</li>
+                                <li><strong>Statut</strong> - actif, en maintenance, inactif</li>
+                                <li><strong>Propriétaire</strong> - Nom du propriétaire actuel</li>
+                                <li><strong>Service</strong> - Service ou département</li>
+                                <li><strong>Date d'achat</strong> - Format JJ/MM/AAAA</li>
+                                <li><strong>Notes</strong> - Informations supplémentaires</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-control:focus, .form-check-input:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .input-group-text {
+        border-right: 0;
+    }
+    .input-group .form-control {
+        border-left: 0;
+    }
+    .alert-info {
+        background-color: rgba(var(--bs-info-rgb), 0.1);
+        border-left: 4px solid var(--bs-info);
+    }
+    [data-bs-theme="dark"] .alert-info {
+        background-color: rgba(var(--bs-info-rgb), 0.2);
+    }
+    [data-bs-theme="dark"] .bg-light {
+        background-color: var(--bs-dark) !important;
+    }
+    .form-check-input:checked {
+        background-color: var(--bs-primary);
+        border-color: var(--bs-primary);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // File input enhancement
+        const fileInput = document.getElementById('file');
+        const form = document.querySelector('form');
+        
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                const fileName = this.files[0].name;
+                const fileExtension = fileName.split('.').pop().toLowerCase();
+                
+                if (fileExtension !== 'xlsx') {
+                    alert('Veuillez sélectionner un fichier Excel (.xlsx)');
+                    this.value = '';
+                }
+            }
+        });
+        
+        form.addEventListener('submit', function(event) {
+            if (!fileInput.files.length) {
+                event.preventDefault();
+                alert('Veuillez sélectionner un fichier à importer');
+            }
+        });
+        
+        // Prevent zoom on mobile devices when focusing inputs
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            const viewportMeta = document.querySelector('meta[name="viewport"]');
+            
+            document.addEventListener('focusin', function(e) {
+                if (e.target.tagName === 'INPUT') {
+                    viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0');
+                }
+            });
+            
+            document.addEventListener('focusout', function(e) {
+                viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+            });
+        }
+    });
+</script>
 {% endblock %}

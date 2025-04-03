@@ -2,71 +2,266 @@
 {% block title %}Registres de Maintenance{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Registres de Maintenance</h2>
-        <div>
-            <a href="{{ url_for('export_maintenance_excel') }}" class="btn btn-warning me-2">
-                <i class="fas fa-file-excel"></i> Exporter
+<div class="container-fluid py-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <h2 class="mb-0"><i class="fas fa-tools me-2"></i>Registres de Maintenance</h2>
+        <div class="btn-toolbar gap-2">
+            <a href="{{ url_for('export_maintenance_excel') }}" class="btn btn-sm btn-outline-warning">
+                <i class="fas fa-file-export me-1 d-none d-sm-inline"></i> Exporter
             </a>
-            <a href="{{ url_for('add_maintenance') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Nouvelle Maintenance
+            <a href="{{ url_for('add_maintenance') }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus me-1"></i> Nouvelle Maintenance
             </a>
         </div>
     </div>
 
-    <div class="card">
+    <div class="card shadow-sm mb-4">
         <div class="card-body">
+            <div class="row g-3">
+                <div class="col-12 col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" id="tableFilter" class="form-control" 
+                               placeholder="Rechercher...">
+                        <button type="button" class="btn btn-outline-secondary d-md-none" id="clearSearch">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <select class="form-select" id="statusFilter">
+                        <option value="">Tous les statuts</option>
+                        <option value="terminé">Terminé</option>
+                        <option value="en cours">En cours</option>
+                        <option value="planifié">Planifié</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
+                <table class="table table-hover align-middle mb-0" id="dataTable">
+                    <thead class="table-light">
                         <tr>
-                            <th>Référence</th>
+                            <th class="d-none d-md-table-cell">Référence</th>
                             <th>Appareil</th>
-                            <th>Date</th>
-                            <th>Technicien</th>
+                            <th class="d-none d-md-table-cell">Date</th>
+                            <th class="d-none d-lg-table-cell">Technicien</th>
                             <th>Statut</th>
-                            <th>Actions</th>
+                            <th class="text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for record in maintenance_records %}
+                        {% for record in records %}
                         <tr>
-                            <td>{{ record.reference }}</td>
+                            <td class="d-none d-md-table-cell">{{ record.reference }}</td>
                             <td>
-                                <a href="{{ url_for('device_details', device_id=record.device_id) }}">
-                                    {{ record.device.name }}
-                                </a>
+                                <div class="d-md-none">
+                                    <strong>{{ record.device.name }}</strong><br>
+                                    <small class="text-muted">{{ record.device.marque }} {{ record.device.modele }}</small><br>
+                                    <small class="text-muted">{{ record.reference }} | {{ record.maintenance_date.strftime('%d/%m/%Y') }}</small>
+                                </div>
+                                <div class="d-none d-md-block">
+                                    <a href="{{ url_for('device_details', device_id=record.device_id) }}">
+                                        {{ record.device.name }}
+                                    </a>
+                                    {% if record.device.marque or record.device.modele %}
+                                    <br><small class="text-muted">{{ record.device.marque }} {{ record.device.modele }}</small>
+                                    {% endif %}
+                                </div>
                             </td>
-                            <td>{{ record.maintenance_date.strftime('%d/%m/%Y') }}</td>
-                            <td>{{ record.technician }}</td>
+                            <td class="d-none d-md-table-cell">{{ record.maintenance_date.strftime('%d/%m/%Y') }}</td>
+                            <td class="d-none d-lg-table-cell">{{ record.technician }}</td>
                             <td>
                                 <span class="badge bg-{{ 'success' if record.status == 'terminé' 
                                                         else 'warning' if record.status == 'en cours' 
-                                                        else 'secondary' }}">
+                                                        else 'danger' }}">
                                     {{ record.status }}
                                 </span>
                             </td>
-                            <td>
-                                <a href="{{ url_for('print_maintenance', record_id=record.id) }}" 
-                                   class="btn btn-sm btn-info" title="Imprimer">
-                                    <i class="fas fa-print"></i>
-                                </a>
-                                <a href="{{ url_for('edit_maintenance', record_id=record.id) }}" 
-                                   class="btn btn-sm btn-warning" title="Modifier">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="{{ url_for('delete_maintenance', record_id=record.id) }}" 
-                                   class="btn btn-sm btn-danger delete-confirm" title="Supprimer">
-                                    <i class="fas fa-trash"></i>
-                                </a>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('print_maintenance', record_id=record.id) }}" class="btn btn-outline-secondary" target="_blank">
+                                        <i class="fas fa-print"></i>
+                                    </a>
+                                    <a href="{{ url_for('edit_maintenance', record_id=record.id) }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger delete-record" 
+                                            data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                            data-record-id="{{ record.id }}" data-record-ref="{{ record.reference }}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
+                        {% if not records %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                <i class="fas fa-info-circle me-2"></i>Aucun registre de maintenance trouvé
+                            </td>
+                        </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
         </div>
+    </div>
+    
+    <!-- Floating action button for mobile -->
+    <div class="d-block d-md-none position-fixed" style="bottom: 20px; right: 20px; z-index: 1000;">
+        <a href="{{ url_for('add_maintenance') }}" class="btn btn-primary rounded-circle shadow" style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-plus fa-lg"></i>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl, {
+                trigger: window.innerWidth < 768 ? 'click' : 'hover'
+            });
+        });
+        
+        // Enhanced table filtering
+        const tableFilter = document.getElementById('tableFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const clearSearchBtn = document.getElementById('clearSearch');
+        const tableRows = document.querySelectorAll('#dataTable tbody tr');
+        
+        function filterTable() {
+            const searchValue = tableFilter.value.toLowerCase();
+            const statusValue = statusFilter.value.toLowerCase();
+            
+            let visibleCount = 0;
+            
+            tableRows.forEach(row => {
+                if (row.querySelector('td[colspan]')) return; // Skip "no results" row
+                
+                const text = row.textContent.toLowerCase();
+                const statusCell = row.querySelector('td:nth-child(5)');
+                const statusText = statusCell ? statusCell.textContent.trim().toLowerCase() : '';
+                
+                const matchesSearch = searchValue === '' || text.includes(searchValue);
+                const matchesStatus = statusValue === '' || statusText === statusValue;
+                
+                const shouldShow = matchesSearch && matchesStatus;
+                row.style.display = shouldShow ? '' : 'none';
+                
+                if (shouldShow) visibleCount++;
+            });
+            
+            // Show "no results" message if needed
+            const noResultsRow = document.querySelector('#dataTable tbody tr[data-no-results]');
+            if (visibleCount === 0 && !noResultsRow) {
+                const tbody = document.querySelector('#dataTable tbody');
+                const newRow = document.createElement('tr');
+                newRow.setAttribute('data-no-results', 'true');
+                newRow.innerHTML = `
+                    <td colspan="6" class="text-center py-4 text-muted">
+                        <i class="fas fa-search me-2"></i>Aucun résultat trouvé
+                    </td>
+                `;
+                tbody.appendChild(newRow);
+            } else if (visibleCount > 0 && noResultsRow) {
+                noResultsRow.remove();
+            }
+        }
+        
+        if (tableFilter) {
+            tableFilter.addEventListener('input', filterTable);
+            
+            // Add clear button functionality
+            if (clearSearchBtn) {
+                clearSearchBtn.addEventListener('click', function() {
+                    tableFilter.value = '';
+                    filterTable();
+                });
+            }
+        }
+        
+        if (statusFilter) {
+            statusFilter.addEventListener('change', filterTable);
+        }
+        
+        // Make rows clickable on mobile
+        if (window.innerWidth < 768) {
+            tableRows.forEach(row => {
+                if (!row.querySelector('td[colspan]')) {
+                    row.addEventListener('click', function(e) {
+                        // Don't trigger if clicking on a button or link
+                        if (!e.target.closest('a') && !e.target.closest('button')) {
+                            const editLink = this.querySelector('a[title="Modifier"]');
+                            if (editLink) window.location = editLink.href;
+                        }
+                    });
+                    row.style.cursor = 'pointer';
+                }
+            });
+        }
+        
+        // Delete confirmation
+        const deleteModal = document.getElementById('deleteModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const recordId = button.getAttribute('data-record-id');
+                const recordRef = button.getAttribute('data-record-ref');
+                
+                const modalTitle = deleteModal.querySelector('.modal-title');
+                const recordIdInput = deleteModal.querySelector('input[name="record_id"]');
+                const deleteForm = document.getElementById('deleteForm');
+                
+                modalTitle.textContent = `Supprimer ${recordRef}`;
+                recordIdInput.value = recordId;
+                deleteForm.action = `/delete_maintenance/${recordId}`;
+            });
+        }
+    });
+</script>
+
+<!-- Add this at the end of the content block, before the endblock tag -->
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Supprimer l'enregistrement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer cet enregistrement de maintenance? Cette action ne peut pas être annulée.</p>
+                <form id="deleteForm" action="{{ url_for('delete_maintenance', record_id=0) }}" method="GET">
+                    <input type="hidden" name="record_id" value="">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" onclick="document.getElementById('deleteForm').submit();">Supprimer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Debug info - remove in production -->
+<div class="card mt-3 no-print">
+    <div class="card-body">
+        <h5>Debugging Information</h5>
+        <p>Number of records: {{ records|length if records else 0 }}</p>
+        {% if records %}
+            <p>First record reference: {{ records[0].reference if records|length > 0 else 'None' }}</p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

@@ -2,95 +2,123 @@
 {% block title %}Tableau de Bord{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4">Tableau de Bord</h2>
+<div class="container-fluid py-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <h2 class="mb-0"><i class="fas fa-tachometer-alt me-2"></i>Tableau de Bord</h2>
+        <div class="btn-group btn-group-sm">
+            <button id="refreshDashboard" class="btn btn-outline-secondary">
+                <i class="fas fa-sync-alt me-1"></i> Actualiser
+            </button>
+            <a href="{{ url_for('devices') }}" class="btn btn-outline-primary">
+                <i class="fas fa-laptop me-1"></i> Appareils
+            </a>
+        </div>
+    </div>
     
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h5>Total Appareils</h5>
-                    <h2>{{ total_devices }}</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card dashboard-card h-100 border-0 shadow-sm">
+                <div class="card-body bg-primary bg-gradient text-white rounded d-flex flex-column align-items-center justify-content-center p-3">
+                    <i class="fas fa-laptop fa-3x mb-2"></i>
+                    <h5 class="card-title mb-1">Total</h5>
+                    <h2 class="display-5 mb-0 fw-bold">{{ total_devices }}</h2>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5>Actifs</h5>
-                    <h2>{{ active_devices }}</h2>
+        <div class="col-6 col-md-3">
+            <div class="card dashboard-card h-100 border-0 shadow-sm">
+                <div class="card-body bg-success bg-gradient text-white rounded d-flex flex-column align-items-center justify-content-center p-3">
+                    <i class="fas fa-check-circle fa-3x mb-2"></i>
+                    <h5 class="card-title mb-1">Actifs</h5>
+                    <h2 class="display-5 mb-0 fw-bold">{{ active_devices }}</h2>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-warning">
-                <div class="card-body">
-                    <h5>En Maintenance</h5>
-                    <h2>{{ maintenance_devices }}</h2>
+        <div class="col-6 col-md-3">
+            <div class="card dashboard-card h-100 border-0 shadow-sm">
+                <div class="card-body bg-warning bg-gradient rounded d-flex flex-column align-items-center justify-content-center p-3">
+                    <i class="fas fa-tools fa-3x mb-2"></i>
+                    <h5 class="card-title mb-1">Maintenance</h5>
+                    <h2 class="display-5 mb-0 fw-bold">{{ maintenance_devices }}</h2>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
-                    <h5>Inactifs</h5>
-                    <h2>{{ inactive_devices }}</h2>
+        <div class="col-6 col-md-3">
+            <div class="card dashboard-card h-100 border-0 shadow-sm">
+                <div class="card-body bg-danger bg-gradient text-white rounded d-flex flex-column align-items-center justify-content-center p-3">
+                    <i class="fas fa-times-circle fa-3x mb-2"></i>
+                    <h5 class="card-title mb-1">Inactifs</h5>
+                    <h2 class="display-5 mb-0 fw-bold">{{ inactive_devices }}</h2>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5>Derniers Appareils Ajoutés</h5>
+    <div class="row g-3">
+        <div class="col-12 col-lg-6">
+            <div class="card mb-4 shadow-sm border-0">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Derniers Appareils</h5>
+                    <a href="{{ url_for('devices') }}" class="btn btn-sm btn-outline-primary">
+                        Voir tout <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
                 </div>
-                <div class="card-body">
-                    <div class="list-group">
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
                         {% for device in recent_devices %}
                         <a href="{{ url_for('device_details', device_id=device.id) }}" 
-                           class="list-group-item list-group-item-action">
+                           class="list-group-item list-group-item-action py-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="mb-1">{{ device.name }}</h6>
-                                    <small>{{ device.type }} - {{ device.serial_number }}</small>
+                                    <h6 class="mb-1 fw-bold">{{ device.name }}</h6>
+                                    <small class="text-muted">{{ device.type }} - {{ device.serial_number }}</small>
                                 </div>
                                 <span class="badge bg-{{ 'success' if device.status == 'actif' 
                                                        else 'warning' if device.status == 'en maintenance' 
-                                                       else 'danger' }}">
+                                                       else 'danger' }} rounded-pill">
                                     {{ device.status }}
                                 </span>
                             </div>
                         </a>
+                        {% else %}
+                        <div class="list-group-item py-4 text-center text-muted">
+                            <i class="fas fa-info-circle me-2"></i>Aucun appareil récent
+                        </div>
                         {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5>Dernières Maintenances</h5>
+        <div class="col-12 col-lg-6">
+            <div class="card mb-4 shadow-sm border-0">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0"><i class="fas fa-wrench me-2"></i>Dernières Maintenances</h5>
+                    <a href="{{ url_for('maintenance') }}" class="btn btn-sm btn-outline-primary">
+                        Voir tout <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
                 </div>
-                <div class="card-body">
-                    <div class="list-group">
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
                         {% for record in recent_maintenance %}
                         <a href="{{ url_for('device_details', device_id=record.device_id) }}" 
-                           class="list-group-item list-group-item-action">
+                           class="list-group-item list-group-item-action py-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="mb-1">{{ record.device.name }}</h6>
-                                    <small>{{ record.maintenance_date.strftime('%d/%m/%Y') }} - {{ record.technician }}</small>
+                                    <h6 class="mb-1 fw-bold">{{ record.device.name }}</h6>
+                                    <small class="text-muted">{{ record.maintenance_date.strftime('%d/%m/%Y') }} - {{ record.technician }}</small>
                                 </div>
                                 <span class="badge bg-{{ 'success' if record.status == 'terminé' 
                                                        else 'warning' if record.status == 'en cours' 
-                                                       else 'secondary' }}">
+                                                       else 'secondary' }} rounded-pill">
                                     {{ record.status }}
                                 </span>
                             </div>
                         </a>
+                        {% else %}
+                        <div class="list-group-item py-4 text-center text-muted">
+                            <i class="fas fa-info-circle me-2"></i>Aucune maintenance récente
+                        </div>
                         {% endfor %}
                     </div>
                 </div>
@@ -98,4 +126,84 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    .list-group-item-action:hover {
+        background-color: rgba(var(--bs-primary-rgb), 0.05);
+    }
+    [data-bs-theme="dark"] .bg-light {
+        background-color: var(--bs-dark) !important;
+    }
+    [data-bs-theme="dark"] .list-group-item-action:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+    @media (max-width: 576px) {
+        .display-5 {
+            font-size: 1.8rem;
+        }
+        .fa-3x {
+            font-size: 2em;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Refresh dashboard data
+        const refreshBtn = document.getElementById('refreshDashboard');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                icon.classList.add('fa-spin');
+                this.disabled = true;
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            });
+        }
+        
+        // Add animation to cards
+        const cards = document.querySelectorAll('.dashboard-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 100 + (index * 100));
+        });
+        
+        // Enable pull-to-refresh on mobile
+        let touchStartY = 0;
+        let touchEndY = 0;
+        
+        document.addEventListener('touchstart', function(e) {
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        
+        document.addEventListener('touchmove', function(e) {
+            touchEndY = e.touches[0].clientY;
+        }, { passive: true });
+        
+        document.addEventListener('touchend', function() {
+            if (window.scrollY === 0 && touchEndY - touchStartY > 100) {
+                window.location.reload();
+            }
+        }, { passive: true });
+    });
+</script>
 {% endblock %}

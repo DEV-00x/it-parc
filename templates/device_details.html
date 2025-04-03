@@ -2,70 +2,85 @@
 {% block title %}Détails de l'Appareil{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>{{ device.name }}</h2>
-        <div>
-            <a href="{{ url_for('devices') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Retour
+<div class="container-fluid py-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <h2 class="mb-0 text-break">{{ device.name }}</h2>
+        <div class="btn-toolbar gap-2">
+            <a href="{{ url_for('devices') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Retour
             </a>
-            <a href="{{ url_for('edit_device', device_id=device.id) }}" class="btn btn-warning">
-                <i class="fas fa-edit"></i> Modifier
+            <a href="{{ url_for('edit_device', device_id=device.id) }}" class="btn btn-sm btn-warning">
+                <i class="fas fa-edit me-1"></i> Modifier
             </a>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5>Informations de l'Appareil</h5>
+    <div class="row g-4">
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informations de l'Appareil</h5>
                 </div>
                 <div class="card-body">
-                    <table class="table table-striped">
-                        <tr><th>Type:</th><td>{{ device.type }}</td></tr>
-                        <tr><th>N° Série:</th><td>{{ device.serial_number }}</td></tr>
-                        <tr><th>Statut:</th>
-                            <td><span class="badge bg-{{ 'success' if device.status == 'actif' else 'warning' if device.status == 'en maintenance' else 'danger' }}">
-                                {{ device.status }}
-                            </span></td>
-                        </tr>
-                        <tr><th>Assigné à:</th><td>{{ device.assigned_to or '-' }}</td></tr>
-                        <tr><th>Service:</th><td>{{ device.service or '-' }}</td></tr>
-                        <tr><th>Département:</th><td>{{ device.department or '-' }}</td></tr>
-                        <tr><th>Adresse MAC:</th><td>{{ device.mac_address or '-' }}</td></tr>
-                        <tr><th>Notes:</th><td>{{ device.notes or '-' }}</td></tr>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-striped mb-0">
+                            <tr>
+                                <th style="width: 30%">Type:</th>
+                                <td><span class="badge bg-light text-dark">{{ device.type }}</span></td>
+                            </tr>
+                            <tr><th>N° Série:</th><td class="text-break">{{ device.serial_number }}</td></tr>
+                            <tr>
+                                <th>Statut:</th>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if device.status == 'actif' 
+                                                           else 'warning' if device.status == 'en maintenance' 
+                                                           else 'danger' }}">
+                                        {{ device.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr><th>Marque:</th><td>{{ device.marque or '-' }}</td></tr>
+                            <tr><th>Modèle:</th><td>{{ device.modele or '-' }}</td></tr>
+                            <tr><th>Assigné à:</th><td class="text-break">{{ device.assigned_to or '-' }}</td></tr>
+                            <tr><th>Service:</th><td>{{ device.service or '-' }}</td></tr>
+                            <tr><th>Notes:</th><td class="text-break">{{ device.notes or '-' }}</td></tr>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5>Historique des Propriétaires</h5>
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Historique des Propriétaires</h5>
                     <a href="{{ url_for('ownership_history', device_id=device.id) }}" class="btn btn-sm btn-info">
-                        Voir tout
+                        <i class="fas fa-external-link-alt d-none d-sm-inline me-1"></i>Voir tout
                     </a>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
                                 <tr>
                                     <th>Date</th>
-                                    <th>Ancien</th>
-                                    <th>Nouveau</th>
+                                    <th>Ancien Propriétaire</th>
+                                    <th>Nouveau Propriétaire</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for change in device.ownership_changes[:5] %}
                                 <tr>
                                     <td>{{ change.change_date.strftime('%d/%m/%Y') }}</td>
-                                    <td>{{ change.previous_owner }}</td>
-                                    <td>{{ change.new_owner }}</td>
+                                    <td class="text-break">{{ change.previous_owner }}</td>
+                                    <td class="text-break">{{ change.new_owner }}</td>
                                 </tr>
                                 {% endfor %}
+                                {% if not device.ownership_changes %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-3 text-muted">Aucun historique disponible</td>
+                                </tr>
+                                {% endif %}
                             </tbody>
                         </table>
                     </div>
@@ -74,55 +89,96 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5>Registres de Maintenance</h5>
-            <a href="{{ url_for('add_maintenance', device_id=device.id) }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Nouvelle Maintenance
+    <div class="card shadow-sm mt-4">
+        <div class="card-header bg-light d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+            <h5 class="mb-0"><i class="fas fa-tools me-2"></i>Registres de Maintenance</h5>
+            <a href="{{ url_for('add_maintenance', device_id=device.id) }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus me-1"></i> Nouvelle Maintenance
             </a>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table">
-                    <thead>
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
                         <tr>
                             <th>Référence</th>
                             <th>Date</th>
-                            <th>Description</th>
+                            <th class="d-none d-md-table-cell">Description</th>
                             <th>Statut</th>
-                            <th>Technicien</th>
-                            <th>Actions</th>
+                            <th class="d-none d-sm-table-cell">Technicien</th>
+                            <th class="text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for record in maintenance_records %}
+                        {% for record in device.maintenance_records %}
                         <tr>
-                            <td>{{ record.reference }}</td>
+                            <td class="text-break">{{ record.reference }}</td>
                             <td>{{ record.maintenance_date.strftime('%d/%m/%Y') }}</td>
-                            <td>{{ record.issue_description[:50] }}...</td>
+                            <td class="d-none d-md-table-cell text-truncate" style="max-width: 200px;">
+                                {{ record.issue_description }}
+                            </td>
                             <td>
-                                <span class="badge bg-{{ 'success' if record.status == 'terminé' else 'warning' if record.status == 'en cours' else 'secondary' }}">
+                                <span class="badge bg-{{ 'success' if record.status == 'terminé' 
+                                                        else 'warning' if record.status == 'en cours' 
+                                                        else 'secondary' }}">
                                     {{ record.status }}
                                 </span>
                             </td>
-                            <td>{{ record.technician }}</td>
-                            <td>
-                                <a href="{{ url_for('print_maintenance', record_id=record.id) }}" class="btn btn-sm btn-info">
-                                    <i class="fas fa-print"></i>
-                                </a>
-                                <a href="{{ url_for('edit_maintenance', record_id=record.id) }}" class="btn btn-sm btn-warning">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="{{ url_for('delete_maintenance', record_id=record.id) }}" class="btn btn-sm btn-danger delete-confirm">
-                                    <i class="fas fa-trash"></i>
-                                </a>
+                            <td class="d-none d-sm-table-cell">{{ record.technician }}</td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('print_maintenance', record_id=record.id) }}" 
+                                       class="btn btn-outline-info" data-bs-toggle="tooltip" title="Imprimer">
+                                        <i class="fas fa-print"></i>
+                                    </a>
+                                    <a href="{{ url_for('edit_maintenance', record_id=record.id) }}" 
+                                       class="btn btn-outline-warning" data-bs-toggle="tooltip" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
+                        {% if not device.maintenance_records %}
+                        <tr>
+                            <td colspan="6" class="text-center py-3 text-muted">Aucun registre de maintenance disponible</td>
+                        </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl, {
+                trigger: 'hover'
+            });
+        });
+        
+        // Make maintenance rows clickable on mobile
+        if (window.innerWidth < 768) {
+            const rows = document.querySelectorAll('.table-hover tbody tr');
+            rows.forEach(row => {
+                row.addEventListener('click', function(e) {
+                    // Don't trigger if clicking on a button
+                    if (!e.target.closest('a') && !row.querySelector('td[colspan]')) {
+                        const editLink = this.querySelector('a[title="Modifier"]');
+                        if (editLink) window.location = editLink.href;
+                    }
+                });
+                if (!row.querySelector('td[colspan]')) {
+                    row.style.cursor = 'pointer';
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

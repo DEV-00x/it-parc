@@ -2,52 +2,316 @@
 {% block title %}Gestion des Utilisateurs{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Gestion des Utilisateurs</h2>
-        <a href="{{ url_for('add_user') }}" class="btn btn-primary">
-            <i class="fas fa-user-plus"></i> Nouvel Utilisateur
-        </a>
+<div class="container-fluid py-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <h2 class="mb-0"><i class="fas fa-users me-2"></i>Gestion des Utilisateurs</h2>
+        <div class="d-flex gap-2">
+            <div class="input-group input-group-sm d-none d-md-flex" style="width: 200px;">
+                <input type="text" class="form-control" id="userSearch" placeholder="Rechercher...">
+                <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <a href="{{ url_for('add_user') }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-user-plus me-1"></i> Nouvel Utilisateur
+            </a>
+        </div>
     </div>
 
-    <div class="card">
-        <div class="card-body">
+    <div class="card shadow-sm">
+        <!-- تم إزالة animate__animated animate__fadeIn لتجنب مشاكل التحميل -->
+        <div class="card-header bg-light py-3">
+            <h5 class="mb-0"><i class="fas fa-user-shield me-2"></i>Liste des Utilisateurs</h5>
+        </div>
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
+                <table class="table table-hover align-middle mb-0" id="dataTable">
+                    <thead class="table-light">
                         <tr>
                             <th>Nom d'utilisateur</th>
                             <th>Type</th>
-                            <th>Actions</th>
+                            <th class="text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for user in users %}
                         <tr>
-                            <td>{{ user.username }}</td>
+                            <td class="fw-bold">{{ user.username }}</td>
                             <td>
                                 <span class="badge bg-{{ 'primary' if user.is_admin else 'secondary' }}">
                                     {{ 'Administrateur' if user.is_admin else 'Utilisateur' }}
                                 </span>
                             </td>
-                            <td>
-                                <a href="{{ url_for('edit_user', user_id=user.id) }}" 
-                                   class="btn btn-sm btn-warning">
-                                    <i class="fas fa-edit"></i> Modifier
-                                </a>
-                                {% if user.id != current_user.id %}
-                                <a href="{{ url_for('delete_user', user_id=user.id) }}" 
-                                   class="btn btn-sm btn-danger delete-confirm">
-                                    <i class="fas fa-trash"></i> Supprimer
-                                </a>
-                                {% endif %}
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('edit_user', user_id=user.id) }}" 
+                                       class="btn btn-outline-warning">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('delete_user', user_id=user.id) }}" 
+                                       class="btn btn-outline-danger delete-confirm" 
+                                       data-item-name="l'utilisateur '{{ user.username }}'">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+            
+            <!-- Card View for Mobile -->
+            <div class="user-cards d-md-none d-none">
+                <div class="row g-3 p-3">
+                    {% for user in users %}
+                    <div class="col-12">
+                        <div class="card h-100 border">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h5 class="card-title mb-1">{{ user.username }}</h5>
+                                    <span class="badge bg-{{ 'primary' if user.is_admin else 'secondary' }}">
+                                        {{ 'Administrateur' if user.is_admin else 'Utilisateur' }}
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-end gap-2 mt-3">
+                                    <a href="{{ url_for('edit_user', user_id=user.id) }}" 
+                                       class="btn btn-sm btn-outline-warning">
+                                        <i class="fas fa-edit me-1"></i> Modifier
+                                    </a>
+                                    <a href="{{ url_for('delete_user', user_id=user.id) }}" 
+                                       class="btn btn-sm btn-outline-danger delete-confirm"
+                                       data-item-name="l'utilisateur '{{ user.username }}'">
+                                        <i class="fas fa-trash me-1"></i> Supprimer
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir supprimer <span id="itemName"></span> ?</p>
+                    <p class="text-danger"><small>Cette action est irréversible.</small></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <a href="#" class="btn btn-danger" id="confirmDelete">Supprimer</a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .badge {
+        font-weight: normal;
+        padding: 0.5em 0.8em;
+    }
+    [data-bs-theme="dark"] .bg-light {
+        background-color: var(--bs-dark) !important;
+    }
+    [data-bs-theme="dark"] .table-light {
+        background-color: rgba(255, 255, 255, 0.05);
+        color: var(--bs-light);
+    }
+    [data-bs-theme="dark"] .card {
+        background-color: var(--bs-dark);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    [data-bs-theme="dark"] .card-header {
+        border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+    [data-bs-theme="dark"] .modal-content {
+        background-color: var(--bs-dark);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    [data-bs-theme="dark"] .modal-header, [data-bs-theme="dark"] .modal-footer {
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    .card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+    .user-cards .card {
+        border-radius: 0.5rem;
+    }
+    @media (max-width: 767.98px) {
+        .table td {
+            padding: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // تم إزالة تهيئة tooltips لتجنب المشاكل
+        
+        // Toggle view between table and cards on mobile
+        const addToggleViewButton = () => {
+            if (window.innerWidth < 768) {
+                const toolbar = document.querySelector('.d-flex.gap-2');
+                
+                if (toolbar) {
+                    const toggleBtn = document.createElement('button');
+                    toggleBtn.className = 'btn btn-sm btn-outline-primary';
+                    toggleBtn.id = 'toggleView';
+                    toggleBtn.innerHTML = '<i class="fas fa-th-large"></i>';
+                    
+                    toolbar.prepend(toggleBtn);
+                    
+                    toggleBtn.addEventListener('click', function() {
+                        const icon = this.querySelector('i');
+                        icon.classList.toggle('fa-th-large');
+                        icon.classList.toggle('fa-list');
+                        
+                        const tableView = document.querySelector('.table-responsive');
+                        const cardView = document.querySelector('.user-cards');
+                        
+                        tableView.classList.toggle('d-none');
+                        cardView.classList.toggle('d-none');
+                    });
+                }
+            }
+        };
+        
+        // تأخير تنفيذ الدالة لضمان تحميل الصفحة بشكل كامل
+        setTimeout(addToggleViewButton, 500);
+        
+        // Search functionality
+        const userSearch = document.getElementById('userSearch');
+        const clearSearch = document.getElementById('clearSearch');
+        
+        if (userSearch) {
+            userSearch.addEventListener('input', function() {
+                const searchValue = this.value.toLowerCase();
+                const tableRows = document.querySelectorAll('#dataTable tbody tr');
+                const userCards = document.querySelectorAll('.user-cards .card');
+                
+                // Filter table rows
+                tableRows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchValue) ? '' : 'none';
+                });
+                
+                // Filter cards
+                userCards.forEach(card => {
+                    const text = card.textContent.toLowerCase();
+                    card.parentElement.style.display = text.includes(searchValue) ? '' : 'none';
+                });
+            });
+            
+            if (clearSearch) {
+                clearSearch.addEventListener('click', function() {
+                    userSearch.value = '';
+                    userSearch.dispatchEvent(new Event('input'));
+                });
+            }
+        }
+        
+        // Delete confirmation - using modal instead of simple confirm
+        const deleteButtons = document.querySelectorAll('.delete-confirm');
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmDeleteBtn = document.getElementById('confirmDelete');
+        const itemNameSpan = document.getElementById('itemName');
+        
+        if (confirmModal) {
+            const modalInstance = new bootstrap.Modal(confirmModal);
+            
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const itemName = this.getAttribute('data-item-name');
+                    const deleteUrl = this.getAttribute('href');
+                    
+                    itemNameSpan.textContent = itemName;
+                    confirmDeleteBtn.setAttribute('href', deleteUrl);
+                    
+                    modalInstance.show();
+                });
+            });
+        } else {
+            // Fallback to simple confirm if modal not available
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const itemName = this.getAttribute('data-item-name');
+                    const deleteUrl = this.getAttribute('href');
+                    
+                    if (confirm(`Êtes-vous sûr de vouloir supprimer ${itemName} ? Cette action est irréversible.`)) {
+                        window.location.href = deleteUrl;
+                    }
+                });
+            });
+        }
+        
+        // Add mobile search button
+        const addMobileSearch = () => {
+            if (window.innerWidth < 768) {
+                const cardHeader = document.querySelector('.card-header');
+                
+                if (cardHeader) {
+                    const searchDiv = document.createElement('div');
+                    searchDiv.className = 'mt-3';
+                    searchDiv.innerHTML = `
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" id="mobileSearch" class="form-control" placeholder="Rechercher...">
+                            <button type="button" class="btn btn-outline-secondary" id="mobileClearSearch">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `;
+                    
+                    cardHeader.appendChild(searchDiv);
+                    
+                    const mobileSearch = document.getElementById('mobileSearch');
+                    const mobileClearSearch = document.getElementById('mobileClearSearch');
+                    
+                    if (mobileSearch) {
+                        mobileSearch.addEventListener('input', function() {
+                            if (userSearch) {
+                                userSearch.value = this.value;
+                                userSearch.dispatchEvent(new Event('input'));
+                            }
+                        });
+                        
+                        if (mobileClearSearch) {
+                            mobileClearSearch.addEventListener('click', function() {
+                                mobileSearch.value = '';
+                                mobileSearch.dispatchEvent(new Event('input'));
+                            });
+                        }
+                    }
+                }
+            }
+        };
+        
+        // تأخير تنفيذ الدالة لضمان تحميل الصفحة بشكل كامل
+        setTimeout(addMobileSearch, 500);
+    });
+</script>
 {% endblock %}

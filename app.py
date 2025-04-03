@@ -30,7 +30,10 @@ class Device(db.Model):
     service = db.Column(db.String(100))
     department = db.Column(db.String(100))
     mac_address = db.Column(db.String(17))
+    marque = db.Column(db.String(100))
+    modele = db.Column(db.String(100))
     notes = db.Column(db.Text)
+    # Define the relationship correctly
     maintenance_records = db.relationship('MaintenanceRecord', backref='device', lazy=True, cascade="all, delete-orphan")
     ownership_changes = db.relationship('OwnershipChange', backref='device', lazy=True, cascade="all, delete-orphan")
 
@@ -39,8 +42,10 @@ class Device(db.Model):
 
 class MaintenanceRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    reference = db.Column(db.String(50), unique=True, nullable=False)
     device_id = db.Column(db.Integer, db.ForeignKey('device.id'), nullable=False)
-    reference = db.Column(db.String(20))
+    # Remove this line - it's causing the conflict
+    # device = db.relationship('Device', backref=db.backref('maintenance_records', lazy=True))
     maintenance_date = db.Column(db.Date, nullable=False)
     issue_description = db.Column(db.Text, nullable=False)
     actions_taken = db.Column(db.Text)
@@ -83,7 +88,7 @@ def index():
     data = {
         'total_devices': Device.query.count(),
         'active_devices': Device.query.filter_by(status='actif').count(),
-        'maintenance_devices': Device.query.filter_by(status='en maintenance').count(),
+        'maintenance_devices': MaintenanceRecord.query.filter_by(status='en cours').count(),  # Changed to count maintenance records
         'inactive_devices': Device.query.filter_by(status='inactif').count(),
         'recent_devices': Device.query.order_by(Device.id.desc()).limit(5).all(),
         'recent_maintenance': MaintenanceRecord.query.order_by(MaintenanceRecord.maintenance_date.desc()).limit(5).all(),
@@ -131,8 +136,8 @@ def add_device():
         status = request.form['status']
         assigned_to = request.form.get('assigned_to', '')
         service = request.form.get('service', '')
-        department = request.form.get('department', '')
-        mac_address = request.form.get('mac_address', '')
+        marque = request.form.get('marque', '')
+        modele = request.form.get('modele', '')
         notes = request.form.get('notes', '')
 
         existing_device = Device.query.filter_by(serial_number=serial_number).first()
@@ -147,8 +152,8 @@ def add_device():
             status=status,
             assigned_to=assigned_to,
             service=service,
-            department=department,
-            mac_address=mac_address,
+            marque=marque,
+            modele=modele,
             notes=notes
         )
         db.session.add(new_device)
@@ -213,20 +218,50 @@ def delete_device(device_id):
 @app.route('/maintenance')
 @login_required
 def maintenance():
-    maintenance_records = MaintenanceRecord.query.order_by(MaintenanceRecord.maintenance_date.desc()).all()
-    return render_template('maintenance.html', maintenance_records=maintenance_records)
+    # Join with Device to ensure device information is loaded
+    records = db.session.query(MaintenanceRecord).join(
+        Device, MaintenanceRecord.device_id == Device.id
+    ).order_by(MaintenanceRecord.maintenance_date.desc()).all()
+    
+    # Add debugging to check if records exist
+    print(f"Found {len(records)} maintenance records")
+    for record in records:
+        print(f"Record ID: {record.id}, Reference: {record.reference}, Device: {record.device.name if record.device else 'No device'}")
+    
+    return render_template('maintenance.html', records=records)
 
 def generate_maintenance_reference(maintenance_date):
     year = maintenance_date.year
     month = maintenance_date.month
 
-    count = MaintenanceRecord.query.filter(
+    # Get all references for the current month/year
+    refs = MaintenanceRecord.query.filter(
         db.extract('year', MaintenanceRecord.maintenance_date) == year,
         db.extract('month', MaintenanceRecord.maintenance_date) == month
-    ).count()
-
-    number_in_month = count + 1
-    reference = f"REF:{number_in_month:02d}/INF/{year}"
+    ).with_entities(MaintenanceRecord.reference).all()
+    
+    # Extract numbers from references
+    numbers = []
+    for ref in refs:
+        try:
+            # Format is REF:XX/INF/YYYY
+            num_str = ref[0].split(':')[1].split('/')[0]
+            numbers.append(int(num_str))
+        except (IndexError, ValueError):
+            continue
+    
+    # Find the next available number
+    next_num = 1
+    if numbers:
+        next_num = max(numbers) + 1
+    
+    reference = f"REF:{next_num:02d}/INF/{year}"
+    
+    # Double check it's unique
+    while MaintenanceRecord.query.filter_by(reference=reference).first():
+        next_num += 1
+        reference = f"REF:{next_num:02d}/INF/{year}"
+    
     return reference
 
 @app.route('/add_maintenance', methods=['GET', 'POST'])
@@ -269,10 +304,18 @@ def add_maintenance(device_id=None):
             db.session.add(new_record)
 
             device = Device.query.get_or_404(device_id)
-            if status == 'en cours' and device.status != 'en maintenance':
+            if status == 'en cours':
                 device.status = 'en maintenance'
-            elif status == 'terminé' and device.status == 'en maintenance':
-                device.status = 'actif'
+            elif status == 'terminé':
+                # Check if there are any other ongoing maintenance records for this device
+                other_ongoing = MaintenanceRecord.query.filter(
+                    MaintenanceRecord.device_id == device_id,
+                    MaintenanceRecord.status == 'en cours'
+                ).first()
+                
+                # Only change device status to active if there are no other ongoing maintenance records
+                if not other_ongoing:
+                    device.status = 'actif'
 
             db.session.commit()
             flash('Registre de maintenance ajouté avec succès!', 'success')
@@ -294,6 +337,7 @@ def edit_maintenance(record_id):
     record = MaintenanceRecord.query.get_or_404(record_id)
     if request.method == 'POST':
         old_status = record.status
+        new_status = request.form['status']
 
         record.maintenance_date = datetime.strptime(request.form['maintenance_date'], '%Y-%m-%d').date()
 
@@ -302,7 +346,7 @@ def edit_maintenance(record_id):
 
         record.issue_description = request.form['issue_description']
         record.actions_taken = request.form.get('actions_taken', '')
-        record.status = request.form['status']
+        record.status = new_status
         record.technician = request.form['technician']
 
         completion_date_str = request.form.get('completion_date', '')
@@ -311,10 +355,21 @@ def edit_maintenance(record_id):
         record.notes = request.form.get('notes', '')
 
         device = Device.query.get(record.device_id)
-        if record.status == 'en cours' and device.status != 'en maintenance' and old_status != 'en cours':
+        
+        # Update device status based on maintenance status change
+        if new_status == 'en cours' and device.status != 'en maintenance':
             device.status = 'en maintenance'
-        elif record.status == 'terminé' and device.status == 'en maintenance' and old_status != 'terminé':
-            device.status = 'actif'
+        elif new_status == 'terminé' and old_status == 'en cours':
+            # Check if there are any other ongoing maintenance records for this device
+            other_ongoing = MaintenanceRecord.query.filter(
+                MaintenanceRecord.device_id == device.id,
+                MaintenanceRecord.id != record.id,
+                MaintenanceRecord.status == 'en cours'
+            ).first()
+            
+            # Only change device status to active if there are no other ongoing maintenance records
+            if not other_ongoing:
+                device.status = 'actif'
 
         db.session.commit()
         flash('Registre de maintenance mis à jour avec succès!', 'success')
@@ -329,10 +384,30 @@ def edit_maintenance(record_id):
 @admin_required
 def delete_maintenance(record_id):
     record = MaintenanceRecord.query.get_or_404(record_id)
+    device_id = record.device_id
+    
+    # Check if this is an ongoing maintenance record
+    is_ongoing = record.status == 'en cours'
+    
+    # Delete the record
     db.session.delete(record)
+    
+    # If this was an ongoing maintenance, check if there are other ongoing records
+    if is_ongoing:
+        device = Device.query.get(device_id)
+        other_ongoing = MaintenanceRecord.query.filter(
+            MaintenanceRecord.device_id == device_id,
+            MaintenanceRecord.id != record_id,
+            MaintenanceRecord.status == 'en cours'
+        ).first()
+        
+        # If no other ongoing maintenance records, set device status to active
+        if not other_ongoing and device.status == 'en maintenance':
+            device.status = 'actif'
+    
     db.session.commit()
     flash('Registre de maintenance supprimé avec succès!', 'success')
-    return redirect(url_for('device_details', device_id=record.device_id))
+    return redirect(url_for('device_details', device_id=device_id))
 
 @app.route('/export_devices_excel')
 @login_required
@@ -485,8 +560,8 @@ def import_devices():
                         status=str(row.get('status', 'actif')),
                         assigned_to=str(row.get('assigned_to', '')),
                         service=str(row.get('service', '')),
-                        department=str(row.get('department', '')),
-                        mac_address=str(row.get('mac_address', '')),
+                        marque=str(row.get('marque', '')),
+                        modele=str(row.get('modele', '')),
                         notes=str(row.get('notes', ''))
                     )
                     db.session.add(device)

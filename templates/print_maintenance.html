@@ -1,89 +1,456 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fiche de Maintenance - {{ record.reference }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <style>
-        @media print {
-            .no-print { display: none; }
-            body { margin: 0; padding: 15px; }
+        :root {
+            --border-color: #dee2e6;
+            --bg-light: #f8f9fa;
+            --text-color: #212529;
         }
-        .header { border-bottom: 2px solid #000; margin-bottom: 20px; }
-        .footer { margin-top: 50px; }
+        
+        [data-bs-theme="dark"] {
+            --border-color: #495057;
+            --bg-light: #343a40;
+            --text-color: #f8f9fa;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-color);
+        }
+        
+        .header { 
+            border-bottom: 1px solid var(--border-color); 
+            margin-bottom: 10px; 
+            padding-bottom: 5px;
+        }
+        
+        .footer { 
+            margin-top: 15px; 
+            border-top: 1px solid var(--border-color);
+            padding-top: 10px;
+        }
+        
         .signature-box {
-            border: 1px solid #000;
-            height: 100px;
-            margin-top: 10px;
+            border: 1px solid var(--border-color);
+            height: 60px;
+            margin-top: 5px;
+            padding: 5px;
+            background-color: var(--bg-light);
+        }
+        
+        .maintenance-info {
+            border: 1px solid var(--border-color);
+            border-radius: 0.25rem;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            background-color: var(--bg-light);
+        }
+        
+        .qr-code {
+            text-align: right;
+        }
+        
+        .qr-code img {
+            width: 70px;
+            height: 70px;
+        }
+        
+        .description-box {
+            min-height: 50px;
+            background-color: white;
+        }
+        
+        [data-bs-theme="dark"] .description-box {
+            background-color: #212529;
+        }
+        
+        .toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: var(--bg-light);
             padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        /* Compact tables */
+        .table {
+            margin-bottom: 0;
+        }
+        
+        .table th, .table td {
+            padding: 0.4rem 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        h5 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .compact-text {
+            font-size: 0.9rem;
+        }
+        
+        @media print {
+            .no-print { 
+                display: none !important; 
+            }
+            
+            body { 
+                margin: 0; 
+                padding: 0; 
+                background-color: white !important;
+                color: black !important;
+                font-size: 11pt;
+            }
+            
+            [data-bs-theme="dark"] {
+                --border-color: #000;
+                --bg-light: #fff;
+                --text-color: #000;
+            }
+            
+            [data-bs-theme="dark"] .description-box {
+                background-color: white !important;
+                color: black !important;
+            }
+            
+            .container {
+                width: 100%;
+                max-width: 100%;
+                padding: 0;
+                margin: 0;
+            }
+            
+            .maintenance-info, .description-box {
+                break-inside: avoid;
+            }
+            
+            .header {
+                margin-bottom: 5px;
+            }
+            
+            .header h2 {
+                font-size: 16pt;
+                margin-bottom: 3px;
+            }
+            
+            .header h5 {
+                font-size: 11pt;
+                margin-bottom: 0;
+            }
+            
+            .row {
+                margin-left: -3px;
+                margin-right: -3px;
+            }
+            
+            .col-md-6 {
+                padding-left: 3px;
+                padding-right: 3px;
+            }
+            
+            /* Force side-by-side layout in print mode */
+            .print-row {
+                display: flex;
+                flex-direction: row;
+                width: 100%;
+                margin-bottom: 3px;
+            }
+            
+            .print-col-6 {
+                width: 50%;
+                flex: 0 0 50%;
+                padding: 0 2px;
+            }
+            
+            .maintenance-info {
+                padding: 3px;
+                margin-bottom: 3px;
+            }
+            
+            .description-box {
+                min-height: 30px;
+                padding: 3px !important;
+            }
+            
+            .footer {
+                margin-top: 5px;
+                padding-top: 3px;
+            }
+            
+            .signature-box {
+                height: 40px;
+            }
+            
+            /* Compact text for print */
+            .table th, .table td {
+                padding: 2px 3px;
+                font-size: 10pt;
+            }
+            
+            h5 {
+                font-size: 11pt;
+                margin-bottom: 3px;
+                padding-bottom: 2px;
+            }
+            
+            .compact-text {
+                font-size: 10pt;
+            }
+            
+            /* Optimize page layout */
+            .print-container {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }
+            
+            .print-content {
+                flex: 1;
+            }
+            
+            /* Adjust description boxes to have fixed heights */
+            .description-box {
+                min-height: 30px;
+                max-height: 80px;
+                overflow-y: auto;
+            }
+            
+            /* Make sure content is evenly distributed */
+            .print-row {
+                page-break-inside: avoid;
+            }
+            
+            @page { 
+                size: A4; 
+                margin: 0.3cm; /* Reduced margins */
+            }
+        }
+        
+        @media (max-width: 767.98px) {
+            .header h2 {
+                font-size: 1.5rem;
+            }
+            
+            .header h5 {
+                font-size: 1rem;
+            }
+            
+            .qr-code img {
+                width: 60px;
+                height: 60px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container mt-4">
-        <div class="no-print mb-3">
-            <button onclick="window.print()" class="btn btn-primary">Imprimer</button>
-            <a href="{{ url_for('device_details', device_id=record.device_id) }}" class="btn btn-secondary">Retour</a>
-        </div>
-
-        <div class="header">
-            <div class="row">
-                <div class="col">
-                    <h2>Fiche de Maintenance</h2>
-                    <h4>Référence: {{ record.reference }}</h4>
-                </div>
-                <div class="col text-end">
-                    <p>Date: {{ record.maintenance_date.strftime('%d/%m/%Y') }}</p>
-                </div>
+    <div class="toolbar no-print mb-3">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div>
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="fas fa-print me-1"></i> Imprimer
+                </button>
+                <button onclick="window.history.back()" class="btn btn-secondary ms-2">
+                    <i class="fas fa-arrow-left me-1"></i> Retour
+                </button>
             </div>
-        </div>
-
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <h5>Informations de l'Appareil</h5>
-                <table class="table table-bordered">
-                    <tr><th>Nom:</th><td>{{ record.device.name }}</td></tr>
-                    <tr><th>Type:</th><td>{{ record.device.type }}</td></tr>
-                    <tr><th>N° Série:</th><td>{{ record.device.serial_number }}</td></tr>
-                    <tr><th>Service:</th><td>{{ record.device.service or '-' }}</td></tr>
-                </table>
-            </div>
-            <div class="col-md-6">
-                <h5>Informations de Maintenance</h5>
-                <table class="table table-bordered">
-                    <tr><th>Technicien:</th><td>{{ record.technician }}</td></tr>
-                    <tr><th>Statut:</th><td>{{ record.status }}</td></tr>
-                    <tr><th>Date début:</th><td>{{ record.maintenance_date.strftime('%d/%m/%Y') }}</td></tr>
-                    <tr><th>Date fin:</th><td>{{ record.completion_date.strftime('%d/%m/%Y') if record.completion_date else '-' }}</td></tr>
-                </table>
-            </div>
-        </div>
-
-        <div class="mb-4">
-            <h5>Description du Problème</h5>
-            <div class="border p-3">{{ record.issue_description }}</div>
-        </div>
-
-        <div class="mb-4">
-            <h5>Actions Effectuées</h5>
-            <div class="border p-3">{{ record.actions_taken or '-' }}</div>
-        </div>
-
-        <div class="mb-4">
-            <h5>Notes</h5>
-            <div class="border p-3">{{ record.notes or '-' }}</div>
-        </div>
-
-        <div class="footer row">
-            <div class="col-md-6">
-                <p>Signature du Technicien:</p>
-                <div class="signature-box"></div>
-            </div>
-            <div class="col-md-6">
-                <p>Signature du Responsable:</p>
-                <div class="signature-box"></div>
+            <div>
+                <button id="darkModeToggle" class="btn btn-outline-secondary">
+                    <i class="fas fa-moon"></i>
+                </button>
             </div>
         </div>
     </div>
+
+    <div class="container mt-2 mb-4">
+        <div class="header row align-items-center">
+            <div class="col-8">
+                <h2>Fiche de Maintenance</h2>
+                <h5>Référence: {{ record.reference }}</h5>
+            </div>
+            <div class="col-4 qr-code">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=REF:{{ record.reference }}%0AAPPAREIL:{{ record.device.name }}%0ATYPE:{{ record.device.type }}%0ASERIE:{{ record.device.serial_number }}%0ASERVICE:{{ record.device.service or '-' }}%0ADATE:{{ record.maintenance_date.strftime('%d/%m/%Y') }}" alt="QR Code">
+            </div>
+        </div>
+
+        <!-- Device and Maintenance Info -->
+        <div class="print-row">
+            <div class="print-col-6">
+                <div class="maintenance-info h-100">
+                    <h5 class="border-bottom pb-1 mb-2"><i class="fas fa-laptop me-1"></i>Informations de l'Appareil</h5>
+                    <table class="table table-bordered mb-0">
+                        <tr><th style="width: 40%">Nom:</th><td>{{ record.device.name }}</td></tr>
+                        <tr><th>Type:</th><td>{{ record.device.type }}</td></tr>
+                        <tr><th>N° Série:</th><td>{{ record.device.serial_number }}</td></tr>
+                        <tr><th>Service:</th><td>{{ record.device.service or '-' }}</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="print-col-6">
+                <div class="maintenance-info h-100">
+                    <h5 class="border-bottom pb-1 mb-2"><i class="fas fa-tools me-1"></i>Informations de Maintenance</h5>
+                    <table class="table table-bordered mb-0">
+                        <tr><th style="width: 40%">Technicien:</th><td>{{ record.technician }}</td></tr>
+                        <tr><th>Statut:</th><td>
+                            <span class="badge bg-{{ 'success' if record.status == 'Terminé' else 'warning' if record.status == 'En cours' else 'danger' }}">
+                                {{ record.status }}
+                            </span>
+                        </td></tr>
+                        <tr><th>Date début:</th><td>{{ record.maintenance_date.strftime('%d/%m/%Y') }}</td></tr>
+                        <tr><th>Date fin:</th><td>{{ record.completion_date.strftime('%d/%m/%Y') if record.completion_date else '-' }}</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Problem Description and Actions Taken -->
+        <div class="print-row mt-2">
+            <div class="print-col-6">
+                <div class="maintenance-info h-100">
+                    <h5 class="border-bottom pb-1 mb-2"><i class="fas fa-exclamation-circle me-1"></i>Description du Problème</h5>
+                    <div class="border p-2 description-box compact-text">{{ record.issue_description }}</div>
+                </div>
+            </div>
+            <div class="print-col-6">
+                <div class="maintenance-info h-100">
+                    <h5 class="border-bottom pb-1 mb-2"><i class="fas fa-wrench me-1"></i>Actions Effectuées</h5>
+                    <div class="border p-2 description-box compact-text">{{ record.actions_taken or '-' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="maintenance-info">
+            <h5 class="border-bottom pb-1 mb-2"><i class="fas fa-sticky-note me-1"></i>Notes Additionnelles</h5>
+            <div class="border p-2 description-box compact-text">{{ record.notes or '-' }}</div>
+        </div>
+
+        <!-- Signatures -->
+        <div class="print-row">
+            <div class="print-col-6">
+                <div class="maintenance-info h-100">
+                    <p class="mb-1 compact-text"><i class="fas fa-signature me-1"></i>Signature du Technicien:</p>
+                    <div class="signature-box"></div>
+                </div>
+            </div>
+            <div class="print-col-6">
+                <div class="maintenance-info h-100">
+                    <p class="mb-1 compact-text"><i class="fas fa-signature me-1"></i>Signature du Responsable:</p>
+                    <div class="signature-box"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-2 small text-muted no-print">
+            Document généré le {{ now().strftime('%d/%m/%Y à %H:%M') }}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Dark mode toggle
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const htmlElement = document.documentElement;
+            
+            // Check for saved theme preference or use preferred color scheme
+            const savedTheme = localStorage.getItem('print_theme');
+            if (savedTheme) {
+                htmlElement.setAttribute('data-bs-theme', savedTheme);
+                updateDarkModeIcon(savedTheme);
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                htmlElement.setAttribute('data-bs-theme', 'dark');
+                updateDarkModeIcon('dark');
+            }
+            
+            // Toggle dark/light mode
+            darkModeToggle.addEventListener('click', function() {
+                const currentTheme = htmlElement.getAttribute('data-bs-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                htmlElement.setAttribute('data-bs-theme', newTheme);
+                localStorage.setItem('print_theme', newTheme);
+                updateDarkModeIcon(newTheme);
+            });
+            
+            function updateDarkModeIcon(theme) {
+                const icon = darkModeToggle.querySelector('i');
+                if (theme === 'dark') {
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                } else {
+                    icon.classList.remove('fa-sun');
+                    icon.classList.add('fa-moon');
+                }
+            }
+            
+            // Auto-resize text to fit on one page
+            window.addEventListener('beforeprint', function() {
+                // Reset any previous transformations
+                document.body.style.transform = '';
+                document.body.style.width = '';
+                document.querySelector('.container').style.height = '';
+                
+                // Get the content container
+                const container = document.querySelector('.container');
+                
+                // Force layout calculation
+                container.style.display = 'block';
+                
+                // Measure content height after layout is calculated
+                const contentHeight = container.scrollHeight;
+                const pageHeight = 1050; // A4 height in pixels at 96 DPI minus margins
+                
+                if (contentHeight > pageHeight) {
+                    // Calculate scale factor
+                    const ratio = pageHeight / contentHeight;
+                    const scaleFactor = Math.max(0.8, Math.min(0.95, ratio));
+                    
+                    // Apply scaling
+                    document.body.style.transformOrigin = 'top center';
+                    document.body.style.transform = `scale(${scaleFactor})`;
+                    document.body.style.width = `${(100/scaleFactor)}%`;
+                    
+                    // Adjust container to fill page
+                    container.style.height = `${pageHeight/scaleFactor}px`;
+                    
+                    // Distribute content evenly
+                    const descriptionBoxes = document.querySelectorAll('.description-box');
+                    const availableHeight = (pageHeight / scaleFactor) * 0.3; // Use 30% of page for descriptions
+                    const heightPerBox = availableHeight / descriptionBoxes.length;
+                    
+                    descriptionBoxes.forEach(box => {
+                        box.style.height = `${Math.max(30, Math.min(80, heightPerBox))}px`;
+                    });
+                }
+                
+                // Add a small delay to ensure layout is complete before printing
+                setTimeout(() => {
+                    window.print();
+                }, 200);
+            });
+            
+            window.addEventListener('afterprint', function() {
+                // Reset all transformations and styles
+                document.body.style.transform = '';
+                document.body.style.width = '';
+                document.querySelector('.container').style.height = '';
+                
+                // Reset description box heights
+                const descriptionBoxes = document.querySelectorAll('.description-box');
+                descriptionBoxes.forEach(box => {
+                    box.style.height = '';
+                });
+            });
+        });
+    </script>
 </body>
 </html>

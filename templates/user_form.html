@@ -2,45 +2,241 @@
 {% block title %}{{ 'Modifier' if user else 'Ajouter' }} Utilisateur{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>{{ 'Modifier' if user else 'Ajouter' }} un Utilisateur</h2>
-        <a href="{{ url_for('users') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Retour
+<div class="container-fluid py-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <h2 class="mb-0">
+            <i class="fas fa-{{ 'user-edit' if user else 'user-plus' }} me-2"></i>
+            {{ 'Modifier' if user else 'Ajouter' }} un Utilisateur
+        </h2>
+        <a href="{{ url_for('users') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Retour
         </a>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            <form method="POST">
-                <div class="mb-3">
-                    <label for="username" class="form-label">Nom d'utilisateur*</label>
-                    <input type="text" class="form-control" id="username" name="username"
-                           value="{{ user.username if user else '' }}" required>
+    <div class="card shadow-sm border-0 animate__animated animate__fadeIn">
+        <div class="card-header bg-light py-3">
+            <h5 class="mb-0">
+                <i class="fas fa-user-shield me-2"></i>
+                {{ 'Informations de l\'utilisateur' if user else 'Nouvel utilisateur' }}
+            </h5>
+        </div>
+        <div class="card-body p-4">
+            <form method="POST" class="needs-validation" novalidate>
+                <div class="mb-4">
+                    <label for="username" class="form-label fw-bold">Nom d'utilisateur*</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="fas fa-user"></i></span>
+                        <input type="text" class="form-control" id="username" name="username"
+                               value="{{ user.username if user else '' }}" required>
+                        <div class="invalid-feedback">
+                            Veuillez entrer un nom d'utilisateur
+                        </div>
+                    </div>
+                    <div class="form-text">Le nom d'utilisateur doit être unique</div>
                 </div>
-
-                <div class="mb-3">
-                    <label for="password" class="form-label">
-                        {{ 'Nouveau mot de passe (laisser vide pour ne pas changer)' if user else 'Mot de passe*' }}
-                    </label>
-                    <input type="password" class="form-control" id="password" name="password"
-                           {{ '' if user else 'required' }}>
+                
+                {% if not user %}
+                <div class="mb-4">
+                    <label for="password" class="form-label fw-bold">Mot de passe*</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="fas fa-key"></i></span>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword" aria-label="Afficher/masquer le mot de passe">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <div class="invalid-feedback">
+                            Veuillez entrer un mot de passe
+                        </div>
+                    </div>
+                    <div class="form-text">Utilisez un mot de passe fort (8 caractères minimum)</div>
                 </div>
-
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="is_admin" name="is_admin"
-                           {{ 'checked' if user and user.is_admin }}>
-                    <label class="form-check-label" for="is_admin">Administrateur</label>
+                {% else %}
+                <div class="mb-4">
+                    <label for="password" class="form-label fw-bold">Nouveau mot de passe</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="fas fa-key"></i></span>
+                        <input type="password" class="form-control" id="password" name="password">
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword" aria-label="Afficher/masquer le mot de passe">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="form-text">Laisser vide pour conserver le mot de passe actuel</div>
                 </div>
-
-                <div class="d-flex justify-content-end gap-2">
-                    <a href="{{ url_for('users') }}" class="btn btn-secondary">Annuler</a>
+                {% endif %}
+                
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Droits d'accès</label>
+                    <div class="card border bg-light">
+                        <div class="card-body">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="is_admin" name="is_admin" 
+                                       {{ 'checked' if user and user.is_admin else '' }}>
+                                <label class="form-check-label" for="is_admin">
+                                    <span class="fw-bold">Administrateur</span>
+                                    <div class="form-text">Accès complet à toutes les fonctionnalités</div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <a href="{{ url_for('users') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i> Annuler
+                    </a>
                     <button type="submit" class="btn btn-primary">
-                        {{ 'Modifier' if user else 'Ajouter' }}
+                        <i class="fas fa-save me-1"></i> Enregistrer
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+<style>
+    .form-control:focus, .form-check-input:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .input-group-text {
+        border-right: 0;
+    }
+    .input-group .form-control {
+        border-left: 0;
+    }
+    .input-group .btn {
+        border-left: 0;
+    }
+    .form-check-input:checked {
+        background-color: var(--bs-primary);
+        border-color: var(--bs-primary);
+    }
+    [data-bs-theme="dark"] .bg-light {
+        background-color: var(--bs-dark) !important;
+    }
+    [data-bs-theme="dark"] .card {
+        background-color: var(--bs-dark);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    [data-bs-theme="dark"] .card-header {
+        border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+    [data-bs-theme="dark"] .card.border {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle password visibility
+        const togglePassword = document.getElementById('togglePassword');
+        const password = document.getElementById('password');
+        
+        if (togglePassword && password) {
+            togglePassword.addEventListener('click', function() {
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
+                
+                // Toggle icon
+                this.querySelector('i').classList.toggle('fa-eye');
+                this.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+        }
+        
+        // Form validation
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                if (!this.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                
+                this.classList.add('was-validated');
+            });
+        }
+        
+        // Password strength indicator
+        const addPasswordStrengthMeter = () => {
+            if (!password) return;
+            
+            const meterContainer = document.createElement('div');
+            meterContainer.className = 'password-strength mt-2 d-none';
+            meterContainer.innerHTML = `
+                <div class="progress" style="height: 5px;">
+                    <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                </div>
+                <div class="form-text strength-text mt-1">Force du mot de passe</div>
+            `;
+            
+            password.parentNode.parentNode.appendChild(meterContainer);
+            
+            const progressBar = meterContainer.querySelector('.progress-bar');
+            const strengthText = meterContainer.querySelector('.strength-text');
+            
+            password.addEventListener('input', function() {
+                const val = this.value;
+                
+                if (val.length > 0) {
+                    meterContainer.classList.remove('d-none');
+                    
+                    // Simple password strength calculation
+                    let strength = 0;
+                    
+                    // Length check
+                    if (val.length >= 8) strength += 25;
+                    
+                    // Character variety checks
+                    if (/[A-Z]/.test(val)) strength += 25;
+                    if (/[0-9]/.test(val)) strength += 25;
+                    if (/[^A-Za-z0-9]/.test(val)) strength += 25;
+                    
+                    // Update UI
+                    progressBar.style.width = strength + '%';
+                    
+                    if (strength < 25) {
+                        progressBar.className = 'progress-bar bg-danger';
+                        strengthText.textContent = 'Très faible';
+                    } else if (strength < 50) {
+                        progressBar.className = 'progress-bar bg-warning';
+                        strengthText.textContent = 'Faible';
+                    } else if (strength < 75) {
+                        progressBar.className = 'progress-bar bg-info';
+                        strengthText.textContent = 'Moyen';
+                    } else {
+                        progressBar.className = 'progress-bar bg-success';
+                        strengthText.textContent = 'Fort';
+                    }
+                } else {
+                    meterContainer.classList.add('d-none');
+                }
+            });
+        };
+        
+        // Add password strength meter for new users
+        if (!document.querySelector('.form-text:contains("Laisser vide")')) {
+            addPasswordStrengthMeter();
+        }
+        
+        // Prevent zoom on mobile devices when focusing inputs
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            const viewportMeta = document.querySelector('meta[name="viewport"]');
+            
+            document.addEventListener('focusin', function(e) {
+                if (e.target.tagName === 'INPUT') {
+                    viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0');
+                }
+            });
+            
+            document.addEventListener('focusout', function(e) {
+                viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+            });
+        }
+    });
+</script>
 {% endblock %}

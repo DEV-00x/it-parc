@@ -2,94 +2,175 @@
 {% block title %}{{ 'Modifier' if record else 'Ajouter' }} Maintenance{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>{{ 'Modifier' if record else 'Ajouter' }} un Registre de Maintenance</h2>
-        <a href="{{ url_for('maintenance') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Retour
+<div class="container-fluid py-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <h2 class="mb-0">
+            <i class="fas fa-{{ 'edit' if record else 'plus' }} me-2"></i>
+            {{ 'Modifier' if record else 'Ajouter' }} un Registre de Maintenance
+        </h2>
+        <a href="{{ url_for('maintenance') if not device_id else url_for('device_details', device_id=device_id) }}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Retour
         </a>
     </div>
 
-    <div class="card">
+    <div class="card shadow-sm">
         <div class="card-body">
-            <form method="POST">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
+            <form method="POST" autocomplete="off" novalidate>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 mb-3">
+                        {% if not device_id %}
                         <label for="device_id" class="form-label">Appareil*</label>
-                        <select class="form-select" id="device_id" name="device_id" required 
-                                {{ 'disabled' if device_id else '' }}>
-                            <option value="">Sélectionner...</option>
-                            {% for d in devices %}
-                            <option value="{{ d.id }}" 
-                                    {{ 'selected' if (record and record.device_id == d.id) or device_id == d.id }}>
-                                {{ d.name }} ({{ d.serial_number }})
-                            </option>
-                            {% endfor %}
-                        </select>
-                        {% if device_id %}
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-laptop"></i></span>
+                            <select class="form-select" id="device_id" name="device_id" required>
+                                <option value="">Sélectionner un appareil</option>
+                                {% for d in devices %}
+                                <option value="{{ d.id }}" {{ 'selected' if record and record.device_id == d.id else '' }}>
+                                    {{ d.name }} - {{ d.marque }} {{ d.modele }} ({{ d.serial_number }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="invalid-feedback">Veuillez sélectionner un appareil</div>
+                        {% else %}
                         <input type="hidden" name="device_id" value="{{ device_id }}">
                         {% endif %}
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-12 col-md-6 mb-3">
                         <label for="technician" class="form-label">Technicien*</label>
-                        <input type="text" list="technicians" class="form-control" id="technician" 
-                               name="technician" value="{{ record.technician if record else '' }}" required>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user-cog"></i></span>
+                            <input type="text" list="technicians" class="form-control" id="technician" 
+                                   name="technician" value="{{ record.technician if record else '' }}" required>
+                        </div>
                         <datalist id="technicians">
                             {% for t in technicians %}
                             <option value="{{ t }}">
                             {% endfor %}
                         </datalist>
+                        <div class="invalid-feedback">Veuillez entrer un technicien</div>
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="maintenance_date" class="form-label">Date de Maintenance*</label>
-                        <input type="date" class="form-control" id="maintenance_date" name="maintenance_date"
-                               value="{{ record.maintenance_date if record else today }}" required>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 mb-3">
+                        <label for="maintenance_date" class="form-label">Date de maintenance*</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                            <input type="date" class="form-control" id="maintenance_date" name="maintenance_date"
+                                   value="{{ record.maintenance_date.strftime('%Y-%m-%d') if record else today }}" required>
+                        </div>
+                        <div class="invalid-feedback">Veuillez sélectionner une date</div>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-12 col-md-6 mb-3">
                         <label for="status" class="form-label">Statut*</label>
-                        <select class="form-select" id="status" name="status" required>
-                            <option value="en attente" {{ 'selected' if record and record.status == 'en attente' }}>En Attente</option>
-                            <option value="en cours" {{ 'selected' if record and record.status == 'en cours' }}>En Cours</option>
-                            <option value="terminé" {{ 'selected' if record and record.status == 'terminé' }}>Terminé</option>
-                        </select>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-tasks"></i></span>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="en cours" {{ 'selected' if record and record.status == 'en cours' else '' }}>En cours</option>
+                                <option value="terminé" {{ 'selected' if record and record.status == 'terminé' else '' }}>Terminé</option>
+                                <option value="planifié" {{ 'selected' if record and record.status == 'planifié' else '' }}>Planifié</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label for="issue_description" class="form-label">Description du Problème*</label>
+                    <label for="issue_description" class="form-label">Description du problème*</label>
                     <textarea class="form-control" id="issue_description" name="issue_description" 
                               rows="3" required>{{ record.issue_description if record else '' }}</textarea>
+                    <div class="invalid-feedback">Veuillez décrire le problème</div>
                 </div>
 
                 <div class="mb-3">
-                    <label for="actions_taken" class="form-label">Actions Effectuées</label>
+                    <label for="actions_taken" class="form-label">Actions effectuées</label>
                     <textarea class="form-control" id="actions_taken" name="actions_taken" 
                               rows="3">{{ record.actions_taken if record else '' }}</textarea>
                 </div>
 
-                <div class="mb-3">
-                    <label for="completion_date" class="form-label">Date d'Achèvement</label>
-                    <input type="date" class="form-control" id="completion_date" name="completion_date"
-                           value="{{ record.completion_date if record else '' }}">
+                <div class="mb-3" id="completionDateGroup">
+                    <label for="completion_date" class="form-label">Date de fin</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-calendar-check"></i></span>
+                        <input type="date" class="form-control" id="completion_date" name="completion_date"
+                               value="{{ record.completion_date.strftime('%Y-%m-%d') if record and record.completion_date else '' }}">
+                    </div>
+                    <div class="form-text">Laisser vide si la maintenance est en cours</div>
+                    <div class="invalid-feedback">Veuillez sélectionner une date de fin</div>
                 </div>
 
                 <div class="mb-3">
-                    <label for="notes" class="form-label">Notes</label>
+                    <label for="notes" class="form-label">Notes additionnelles</label>
                     <textarea class="form-control" id="notes" name="notes" 
-                              rows="3">{{ record.notes if record else '' }}</textarea>
+                              rows="2">{{ record.notes if record else '' }}</textarea>
                 </div>
 
-                <div class="d-flex justify-content-end gap-2">
-                    <a href="{{ url_for('maintenance') }}" class="btn btn-secondary">Annuler</a>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <a href="{{ url_for('maintenance') if not device_id else url_for('device_details', device_id=device_id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i> Annuler
+                    </a>
                     <button type="submit" class="btn btn-primary">
-                        {{ 'Modifier' if record else 'Ajouter' }}
+                        <i class="fas fa-save me-1"></i> Enregistrer
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation
+        const form = document.querySelector('form');
+        
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            form.classList.add('was-validated');
+        });
+        
+        // Auto-show completion date when status is "terminé"
+        const statusSelect = document.getElementById('status');
+        const completionDateGroup = document.getElementById('completionDateGroup');
+        const completionDateInput = document.getElementById('completion_date');
+        
+        function updateCompletionDateVisibility() {
+            if (statusSelect.value === 'terminé') {
+                completionDateGroup.classList.add('required-field');
+                completionDateInput.setAttribute('required', 'required');
+                if (!completionDateInput.value) {
+                    // Set today's date if empty
+                    const today = new Date().toISOString().split('T')[0];
+                    completionDateInput.value = today;
+                }
+            } else {
+                completionDateGroup.classList.remove('required-field');
+                completionDateInput.removeAttribute('required');
+            }
+        }
+        
+        updateCompletionDateVisibility();
+        statusSelect.addEventListener('change', updateCompletionDateVisibility);
+        
+        // Prevent zoom on iOS when focusing inputs
+        if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+            const viewportMeta = document.querySelector('meta[name="viewport"]');
+            
+            document.addEventListener('focusin', function(e) {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+                    viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0');
+                }
+            });
+            
+            document.addEventListener('focusout', function(e) {
+                viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+            });
+        }
+    });
+</script>
 {% endblock %}

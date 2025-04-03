@@ -2,60 +2,384 @@
 {% block title %}Résultats de Recherche{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Résultats de Recherche</h2>
-        <a href="javascript:history.back()" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Retour
-        </a>
+<div class="container-fluid py-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <h2 class="mb-0"><i class="fas fa-search me-2"></i>Résultats de Recherche</h2>
+        <div class="d-flex gap-2">
+            <button id="toggleView" class="btn btn-sm btn-outline-primary d-md-none">
+                <i class="fas fa-th-large"></i>
+            </button>
+            <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Retour
+            </a>
+        </div>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            {% if devices %}
+    {% if devices %}
+    <div class="card shadow-sm mb-4 animate__animated animate__fadeIn">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-laptop me-2"></i>Appareils ({{ devices|length }})</h5>
+            <div class="input-group input-group-sm w-auto d-none d-md-flex" style="max-width: 250px;">
+                <input type="text" class="form-control device-search" placeholder="Filtrer...">
+                <button class="btn btn-outline-secondary clear-search" type="button">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
+                <table class="table table-hover align-middle mb-0 device-table">
+                    <thead class="table-light">
                         <tr>
                             <th>Nom</th>
-                            <th>Type</th>
-                            <th>N° Série</th>
+                            <th class="d-none d-md-table-cell">Type</th>
+                            <th class="d-none d-md-table-cell">N° Série</th>
                             <th>Statut</th>
-                            <th>Assigné à</th>
-                            <th>Actions</th>
+                            <th class="d-none d-lg-table-cell">Assigné à</th>
+                            <th class="text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for device in devices %}
                         <tr>
-                            <td>{{ device.name }}</td>
-                            <td>{{ device.type }}</td>
-                            <td>{{ device.serial_number }}</td>
+                            <td class="fw-bold">
+                                {{ device.name }}
+                                <div class="d-md-none">
+                                    <small class="text-muted">{{ device.type }} | {{ device.serial_number }}</small>
+                                </div>
+                            </td>
+                            <td class="d-none d-md-table-cell">{{ device.type }}</td>
+                            <td class="d-none d-md-table-cell">{{ device.serial_number }}</td>
                             <td>
                                 <span class="badge bg-{{ 'success' if device.status == 'actif' 
-                                                       else 'warning' if device.status == 'en maintenance' 
-                                                       else 'danger' }}">
+                                                        else 'warning' if device.status == 'en maintenance' 
+                                                        else 'danger' }}">
                                     {{ device.status }}
                                 </span>
                             </td>
-                            <td>{{ device.assigned_to or '-' }}</td>
-                            <td>
-                                <a href="{{ url_for('device_details', device_id=device.id) }}" 
-                                   class="btn btn-sm btn-info">Détails</a>
+                            <td class="d-none d-lg-table-cell">{{ device.assigned_to or '-' }}</td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('device_details', device_id=device.id) }}" 
+                                       class="btn btn-outline-info" data-bs-toggle="tooltip" title="Détails">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('edit_device', device_id=device.id) }}" 
+                                       class="btn btn-outline-warning" data-bs-toggle="tooltip" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-            {% else %}
-            <div class="text-center py-4">
-                <i class="fas fa-search fa-3x mb-3 text-muted"></i>
-                <h4>Aucun résultat trouvé</h4>
-                <p class="text-muted">Essayez avec d'autres termes de recherche</p>
+            
+            <!-- Card View for Mobile -->
+            <div class="device-cards d-none">
+                <div class="row g-3 p-3">
+                    {% for device in devices %}
+                    <div class="col-12">
+                        <div class="card h-100 border">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h5 class="card-title mb-1">{{ device.name }}</h5>
+                                    <span class="badge bg-{{ 'success' if device.status == 'actif' 
+                                                            else 'warning' if device.status == 'en maintenance' 
+                                                            else 'danger' }}">
+                                        {{ device.status }}
+                                    </span>
+                                </div>
+                                <p class="card-text text-muted small mb-2">{{ device.type }} | {{ device.serial_number }}</p>
+                                {% if device.assigned_to %}
+                                <p class="card-text small mb-3"><i class="fas fa-user me-1"></i> {{ device.assigned_to }}</p>
+                                {% endif %}
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{{ url_for('device_details', device_id=device.id) }}" 
+                                       class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-eye me-1"></i> Détails
+                                    </a>
+                                    <a href="{{ url_for('edit_device', device_id=device.id) }}" 
+                                       class="btn btn-sm btn-outline-warning">
+                                        <i class="fas fa-edit me-1"></i> Modifier
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
-            {% endif %}
         </div>
     </div>
+    {% endif %}
+
+    {% if maintenance_records %}
+    <div class="card shadow-sm animate__animated animate__fadeIn" style="animation-delay: 0.2s;">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-tools me-2"></i>Maintenances ({{ maintenance_records|length }})</h5>
+            <div class="input-group input-group-sm w-auto d-none d-md-flex" style="max-width: 250px;">
+                <input type="text" class="form-control maintenance-search" placeholder="Filtrer...">
+                <button class="btn btn-outline-secondary clear-search" type="button">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 maintenance-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Référence</th>
+                            <th>Appareil</th>
+                            <th class="d-none d-md-table-cell">Date</th>
+                            <th>Statut</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in maintenance_records %}
+                        <tr>
+                            <td>{{ record.reference }}</td>
+                            <td>
+                                <a href="{{ url_for('device_details', device_id=record.device_id) }}">
+                                    {{ record.device.name }}
+                                </a>
+                                <div class="d-md-none">
+                                    <small class="text-muted">{{ record.maintenance_date.strftime('%d/%m/%Y') }}</small>
+                                </div>
+                            </td>
+                            <td class="d-none d-md-table-cell">{{ record.maintenance_date.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if record.status == 'terminé' 
+                                                        else 'warning' if record.status == 'en cours' 
+                                                        else 'secondary' }}">
+                                    {{ record.status }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('print_maintenance', record_id=record.id) }}" 
+                                       class="btn btn-outline-info" data-bs-toggle="tooltip" title="Imprimer">
+                                        <i class="fas fa-print"></i>
+                                    </a>
+                                    <a href="{{ url_for('edit_maintenance', record_id=record.id) }}" 
+                                       class="btn btn-outline-warning" data-bs-toggle="tooltip" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Card View for Mobile -->
+            <div class="maintenance-cards d-none">
+                <div class="row g-3 p-3">
+                    {% for record in maintenance_records %}
+                    <div class="col-12">
+                        <div class="card h-100 border">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h5 class="card-title mb-1">{{ record.reference }}</h5>
+                                    <span class="badge bg-{{ 'success' if record.status == 'terminé' 
+                                                            else 'warning' if record.status == 'en cours' 
+                                                            else 'secondary' }}">
+                                        {{ record.status }}
+                                    </span>
+                                </div>
+                                <p class="card-text mb-2">
+                                    <a href="{{ url_for('device_details', device_id=record.device_id) }}">
+                                        {{ record.device.name }}
+                                    </a>
+                                </p>
+                                <p class="card-text text-muted small mb-3">
+                                    <i class="fas fa-calendar-alt me-1"></i> {{ record.maintenance_date.strftime('%d/%m/%Y') }}
+                                </p>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{{ url_for('print_maintenance', record_id=record.id) }}" 
+                                       class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-print me-1"></i> Imprimer
+                                    </a>
+                                    <a href="{{ url_for('edit_maintenance', record_id=record.id) }}" 
+                                       class="btn btn-sm btn-outline-warning">
+                                        <i class="fas fa-edit me-1"></i> Modifier
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not devices and not maintenance_records %}
+    <div class="card shadow-sm animate__animated animate__fadeIn">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h4>Aucun résultat trouvé</h4>
+            <p class="text-muted">Essayez avec d'autres termes de recherche</p>
+            <a href="javascript:history.back()" class="btn btn-outline-primary mt-3">
+                <i class="fas fa-arrow-left me-1"></i> Retour à la recherche
+            </a>
+        </div>
+    </div>
+    {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+<style>
+    .badge {
+        font-weight: normal;
+        padding: 0.5em 0.8em;
+    }
+    [data-bs-theme="dark"] .bg-light {
+        background-color: var(--bs-dark) !important;
+    }
+    [data-bs-theme="dark"] .table-light {
+        background-color: rgba(255, 255, 255, 0.05);
+        color: var(--bs-light);
+    }
+    [data-bs-theme="dark"] .card {
+        background-color: var(--bs-dark);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    [data-bs-theme="dark"] .card-header {
+        border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+    .card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+    .device-cards .card, .maintenance-cards .card {
+        border-radius: 0.5rem;
+    }
+    @media (max-width: 767.98px) {
+        .table td {
+            padding: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl, {
+                delay: { show: 500, hide: 100 }
+            });
+        });
+        
+        // Toggle view between table and cards on mobile
+        const toggleViewBtn = document.getElementById('toggleView');
+        if (toggleViewBtn) {
+            toggleViewBtn.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                icon.classList.toggle('fa-th-large');
+                icon.classList.toggle('fa-list');
+                
+                const deviceTable = document.querySelector('.device-table');
+                const deviceCards = document.querySelector('.device-cards');
+                const maintenanceTable = document.querySelector('.maintenance-table');
+                const maintenanceCards = document.querySelector('.maintenance-cards');
+                
+                if (deviceTable && deviceCards) {
+                    deviceTable.closest('.table-responsive').classList.toggle('d-none');
+                    deviceCards.classList.toggle('d-none');
+                }
+                
+                if (maintenanceTable && maintenanceCards) {
+                    maintenanceTable.closest('.table-responsive').classList.toggle('d-none');
+                    maintenanceCards.classList.toggle('d-none');
+                }
+            });
+            
+            // Default to card view on small screens
+            if (window.innerWidth < 576) {
+                toggleViewBtn.click();
+            }
+        }
+        
+        // Filter functionality for devices
+        const deviceSearch = document.querySelector('.device-search');
+        if (deviceSearch) {
+            deviceSearch.addEventListener('input', function() {
+                filterTable('.device-table', this.value);
+                filterCards('.device-cards .card', this.value);
+            });
+        }
+        
+        // Filter functionality for maintenance
+        const maintenanceSearch = document.querySelector('.maintenance-search');
+        if (maintenanceSearch) {
+            maintenanceSearch.addEventListener('input', function() {
+                filterTable('.maintenance-table', this.value);
+                filterCards('.maintenance-cards .card', this.value);
+            });
+        }
+        
+        // Clear search buttons
+        const clearButtons = document.querySelectorAll('.clear-search');
+        clearButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const input = this.previousElementSibling;
+                input.value = '';
+                input.dispatchEvent(new Event('input'));
+            });
+        });
+        
+        // Filter table function
+        function filterTable(tableSelector, query) {
+            const table = document.querySelector(tableSelector);
+            if (!table) return;
+            
+            const rows = table.querySelectorAll('tbody tr');
+            const lowerQuery = query.toLowerCase();
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(lowerQuery) ? '' : 'none';
+            });
+        }
+        
+        // Filter cards function
+        function filterCards(cardSelector, query) {
+            const cards = document.querySelectorAll(cardSelector);
+            if (!cards.length) return;
+            
+            const lowerQuery = query.toLowerCase();
+            
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.parentElement.style.display = text.includes(lowerQuery) ? '' : 'none';
+            });
+        }
+        
+        // Add animation to cards
+        const animateCards = () => {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('animate__animated', 'animate__fadeIn');
+                }, index * 100);
+            });
+        };
+        
+        animateCards();
+    });
+</script>
 {% endblock %}

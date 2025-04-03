@@ -2,90 +2,179 @@
 {% block title %}{{ 'Modifier' if device.id else 'Ajouter' }} Appareil{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>{{ 'Modifier' if device.id else 'Ajouter' }} un Appareil</h2>
-        <a href="{{ url_for('devices') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Retour
+<div class="container-fluid py-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <h2 class="mb-0">
+            <i class="fas fa-{{ 'edit' if device.id else 'plus' }} me-2"></i>
+            {{ 'Modifier' if device.id else 'Ajouter' }} un Appareil
+        </h2>
+        <a href="{{ url_for('devices') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Retour
         </a>
     </div>
 
-    <div class="card">
+    <div class="card shadow-sm">
         <div class="card-body">
-            <form method="POST">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
+            <form method="POST" autocomplete="off" novalidate>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 mb-3">
                         <label for="name" class="form-label">Nom*</label>
-                        <input type="text" class="form-control" id="name" name="name" 
-                               value="{{ device.name or '' }}" required>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-laptop"></i></span>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ device.name if device.id else '' }}" required>
+                        </div>
+                        <div class="invalid-feedback">Veuillez entrer un nom</div>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-12 col-md-6 mb-3">
                         <label for="type" class="form-label">Type*</label>
-                        <select class="form-select" id="type" name="type" required>
-                            <option value="">Sélectionner...</option>
-                            <option value="Ordinateur" {{ 'selected' if device.type == 'Ordinateur' }}>Ordinateur</option>
-                            <option value="Imprimante" {{ 'selected' if device.type == 'Imprimante' }}>Imprimante</option>
-                            <option value="Scanner" {{ 'selected' if device.type == 'Scanner' }}>Scanner</option>
-                            <option value="Serveur" {{ 'selected' if device.type == 'Serveur' }}>Serveur</option>
-                        </select>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                            <input type="text" list="device_types" class="form-control" id="type" 
+                                   name="type" value="{{ device.type if device.id else '' }}" required>
+                        </div>
+                        <datalist id="device_types">
+                            {% for t in device_types %}
+                            <option value="{{ t }}">
+                            {% endfor %}
+                        </datalist>
+                        <div class="invalid-feedback">Veuillez spécifier un type</div>
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="serial_number" class="form-label">Numéro de Série*</label>
-                        <input type="text" class="form-control" id="serial_number" name="serial_number"
-                               value="{{ device.serial_number or '' }}" required>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 mb-3">
+                        <label for="serial_number" class="form-label">Numéro de série*</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-barcode"></i></span>
+                            <input type="text" class="form-control" id="serial_number" name="serial_number" 
+                                   value="{{ device.serial_number if device.id else '' }}" required>
+                        </div>
+                        <div class="invalid-feedback">Veuillez entrer un numéro de série</div>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-12 col-md-6 mb-3">
                         <label for="status" class="form-label">Statut*</label>
-                        <select class="form-select" id="status" name="status" required>
-                            <option value="actif" {{ 'selected' if device.status == 'actif' }}>Actif</option>
-                            <option value="en maintenance" {{ 'selected' if device.status == 'en maintenance' }}>En Maintenance</option>
-                            <option value="inactif" {{ 'selected' if device.status == 'inactif' }}>Inactif</option>
-                        </select>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-info-circle"></i></span>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="actif" {{ 'selected' if device.id and device.status == 'actif' else '' }}>Actif</option>
+                                <option value="en maintenance" {{ 'selected' if device.id and device.status == 'en maintenance' else '' }}>En maintenance</option>
+                                <option value="inactif" {{ 'selected' if device.id and device.status == 'inactif' else '' }}>Inactif</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 mb-3">
                         <label for="assigned_to" class="form-label">Assigné à</label>
-                        <input type="text" class="form-control" id="assigned_to" name="assigned_to"
-                               value="{{ device.assigned_to or '' }}">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            <input type="text" class="form-control" id="assigned_to" name="assigned_to" 
+                                   value="{{ device.assigned_to if device.id else '' }}">
+                        </div>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-12 col-md-6 mb-3">
                         <label for="service" class="form-label">Service</label>
-                        <input type="text" class="form-control" id="service" name="service"
-                               value="{{ device.service or '' }}">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-building"></i></span>
+                            <input type="text" list="services" class="form-control" id="service" 
+                                   name="service" value="{{ device.service if device.id else '' }}">
+                        </div>
+                        <datalist id="services">
+                            {% for s in services %}
+                            <option value="{{ s }}">
+                            {% endfor %}
+                        </datalist>
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="department" class="form-label">Département</label>
-                        <input type="text" class="form-control" id="department" name="department"
-                               value="{{ device.department or '' }}">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 mb-3">
+                        <label for="marque" class="form-label">Marque</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-trademark"></i></span>
+                            <input type="text" class="form-control" id="marque" name="marque" 
+                                   value="{{ device.marque if device.id else '' }}">
+                        </div>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="mac_address" class="form-label">Adresse MAC</label>
-                        <input type="text" class="form-control" id="mac_address" name="mac_address"
-                               value="{{ device.mac_address or '' }}" pattern="([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})">
+                    <div class="col-12 col-md-6 mb-3">
+                        <label for="modele" class="form-label">Modèle</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-laptop-code"></i></span>
+                            <input type="text" class="form-control" id="modele" name="modele" 
+                                   value="{{ device.modele if device.id else '' }}">
+                        </div>
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <label for="notes" class="form-label">Notes</label>
-                    <textarea class="form-control" id="notes" name="notes" rows="3">{{ device.notes or '' }}</textarea>
+                    <textarea class="form-control" id="notes" name="notes" rows="3">{{ device.notes if device.id else '' }}</textarea>
                 </div>
 
-                <div class="d-flex justify-content-end gap-2">
-                    <a href="{{ url_for('devices') }}" class="btn btn-secondary">Annuler</a>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <a href="{{ url_for('devices') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i> Annuler
+                    </a>
                     <button type="submit" class="btn btn-primary">
-                        {{ 'Modifier' if device.id else 'Ajouter' }}
+                        <i class="fas fa-save me-1"></i> Enregistrer
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation
+        const form = document.querySelector('form');
+        
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            form.classList.add('was-validated');
+        });
+        
+        // Format MAC address as user types
+        const macInput = document.getElementById('mac_address');
+        if (macInput) {
+            macInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/[^0-9a-fA-F]/g, '');
+                
+                if (value.length <= 12) {
+                    // Format as XX:XX:XX:XX:XX:XX
+                    let formatted = '';
+                    for (let i = 0; i < value.length; i++) {
+                        if (i > 0 && i % 2 === 0 && i < 10) {
+                            formatted += ':';
+                        }
+                        formatted += value[i];
+                    }
+                    e.target.value = formatted;
+                }
+            });
+        }
+        
+        // Prevent zoom on iOS when focusing inputs
+        const viewportMeta = document.querySelector('meta[name="viewport"]');
+        if (viewportMeta && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
+            document.addEventListener('focusin', function(e) {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+                    viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0');
+                }
+            });
+            
+            document.addEventListener('focusout', function(e) {
+                viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+            });
+        }
+    });
+</script>
 {% endblock %}

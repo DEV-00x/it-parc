@@ -2,30 +2,59 @@
 {% block title %}Appareils{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Liste des Appareils</h2>
-        <div>
-            <a href="{{ url_for('export_devices_excel') }}?template=true" class="btn btn-info me-2">Télécharger Modèle</a>
-            <a href="{{ url_for('import_devices') }}" class="btn btn-success me-2">Importer</a>
-            <a href="{{ url_for('export_devices_excel') }}" class="btn btn-warning me-2">Exporter</a>
-            <a href="{{ url_for('add_device') }}" class="btn btn-primary">Ajouter</a>
+<div class="container-fluid py-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <h2 class="mb-0"><i class="fas fa-laptop me-2"></i>Liste des Appareils</h2>
+        <div class="btn-toolbar gap-2">
+            <div class="dropdown d-md-none">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-file me-1"></i> Options
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{{ url_for('export_devices_excel') }}?template=true">
+                        <i class="fas fa-file-download me-1"></i> Télécharger Modèle
+                    </a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('import_devices') }}">
+                        <i class="fas fa-file-upload me-1"></i> Importer
+                    </a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('export_devices_excel') }}">
+                        <i class="fas fa-file-export me-1"></i> Exporter
+                    </a></li>
+                </ul>
+            </div>
+            <div class="btn-group btn-group-sm d-none d-md-flex">
+                <a href="{{ url_for('export_devices_excel') }}?template=true" class="btn btn-outline-info">
+                    <i class="fas fa-file-download me-1"></i> Modèle
+                </a>
+                <a href="{{ url_for('import_devices') }}" class="btn btn-outline-success">
+                    <i class="fas fa-file-upload me-1"></i> Importer
+                </a>
+                <a href="{{ url_for('export_devices_excel') }}" class="btn btn-outline-warning">
+                    <i class="fas fa-file-export me-1"></i> Exporter
+                </a>
+            </div>
+            <a href="{{ url_for('add_device') }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus me-1"></i> Ajouter
+            </a>
         </div>
     </div>
 
-    <div class="card mb-4">
+    <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-8">
+            <div class="row g-3">
+                <div class="col-12 col-md-8">
                     <div class="input-group">
-                        <span class="input-group-text">
+                        <span class="input-group-text bg-light">
                             <i class="fas fa-search"></i>
                         </span>
                         <input type="text" id="tableFilter" class="form-control" 
-                               placeholder="Rechercher par nom, type, numéro de série...">
+                               placeholder="Rechercher...">
+                        <button type="button" class="btn btn-outline-secondary d-md-none" id="clearSearch">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <select class="form-select" id="statusFilter">
                         <option value="">Tous les statuts</option>
                         <option value="actif">Actif</option>
@@ -37,41 +66,283 @@
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Nom</th>
-                    <th>Type</th>
-                    <th>N° Série</th>
-                    <th>Statut</th>
-                    <th>Assigné à</th>
-                    <th>Service</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for device in devices %}
-                <tr>
-                    <td>{{ device.name }}</td>
-                    <td>{{ device.type }}</td>
-                    <td>{{ device.serial_number }}</td>
-                    <td>
-                        <span class="badge bg-{{ 'success' if device.status == 'actif' else 'warning' if device.status == 'en maintenance' else 'danger' }}">
-                            {{ device.status }}
-                        </span>
-                    </td>
-                    <td>{{ device.assigned_to or '-' }}</td>
-                    <td>{{ device.service or '-' }}</td>
-                    <td>
-                        <a href="{{ url_for('device_details', device_id=device.id) }}" class="btn btn-sm btn-info">Détails</a>
-                        <a href="{{ url_for('edit_device', device_id=device.id) }}" class="btn btn-sm btn-warning">Modifier</a>
-                        <a href="{{ url_for('delete_device', device_id=device.id) }}" class="btn btn-sm btn-danger delete-confirm">Supprimer</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="dataTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="d-none d-md-table-cell">Nom</th>
+                            <th class="d-table-cell">Appareil</th>
+                            <th class="d-none d-md-table-cell">N° Série</th>
+                            <th>Statut</th>
+                            <th class="d-none d-lg-table-cell">Marque</th>
+                            <th class="d-none d-lg-table-cell">Modèle</th>
+                            <th class="d-none d-lg-table-cell">Assigné à</th>
+                            <th class="d-none d-lg-table-cell">Service</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for device in devices %}
+                        <tr data-device-id="{{ device.id }}" class="device-row" data-page="{{ loop.index0 // 20 + 1 }}">
+                            <td class="d-none d-md-table-cell fw-bold">{{ device.name }}</td>
+                            <td class="d-table-cell">
+                                <div class="d-md-none">
+                                    <strong>{{ device.name }}</strong><br>
+                                    <small class="text-muted">{{ device.type }} | {{ device.serial_number }}</small>
+                                    {% if device.marque or device.modele %}
+                                    <br><small class="text-muted">{{ device.marque }} {{ device.modele }}</small>
+                                    {% endif %}
+                                </div>
+                                <span class="d-none d-md-inline badge bg-light text-dark">{{ device.type }}</span>
+                            </td>
+                            <td class="d-none d-md-table-cell">{{ device.serial_number }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if device.status == 'actif' else 'warning' if device.status == 'en maintenance' else 'danger' }}">
+                                    {{ device.status }}
+                                </span>
+                            </td>
+                            <td class="d-none d-lg-table-cell">{{ device.marque or '-' }}</td>
+                            <td class="d-none d-lg-table-cell">{{ device.modele or '-' }}</td>
+                            <td class="d-none d-lg-table-cell">{{ device.assigned_to or '-' }}</td>
+                            <td class="d-none d-lg-table-cell">{{ device.service or '-' }}</td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('device_details', device_id=device.id) }}" 
+                                       class="btn btn-outline-info" data-bs-toggle="tooltip" title="Détails">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('edit_device', device_id=device.id) }}" 
+                                       class="btn btn-outline-warning" data-bs-toggle="tooltip" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('delete_device', device_id=device.id) }}" 
+                                       class="btn btn-outline-danger delete-confirm" 
+                                       data-item-name="l'appareil '{{ device.name }}'" 
+                                       data-bs-toggle="tooltip" title="Supprimer">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if not devices %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4 text-muted">
+                                <i class="fas fa-info-circle me-2"></i>Aucun appareil trouvé
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Add pagination controls -->
+        <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+            <div class="text-muted small">
+                <span id="showing-info">Affichage de 1-20 sur {{ devices|length }} appareils</span>
+            </div>
+            <nav aria-label="Page navigation">
+                <ul class="pagination pagination-sm mb-0" id="pagination">
+                    <!-- Pagination will be generated by JavaScript -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+    
+    <!-- Floating action button for mobile -->
+    <div class="d-block d-md-none position-fixed" style="bottom: 20px; right: 20px; z-index: 1000;">
+        <a href="{{ url_for('add_device') }}" class="btn btn-primary rounded-circle shadow" style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-plus fa-lg"></i>
+        </a>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl, {
+                trigger: window.innerWidth < 768 ? 'click' : 'hover'
+            });
+        });
+        
+        // Pagination setup
+        const itemsPerPage = 20;
+        const deviceRows = document.querySelectorAll('.device-row');
+        const totalDevices = deviceRows.length;
+        const totalPages = Math.ceil(totalDevices / itemsPerPage);
+        let currentPage = 1;
+        
+        // Generate pagination controls
+        function generatePagination() {
+            const paginationElement = document.getElementById('pagination');
+            if (!paginationElement) return;
+            
+            paginationElement.innerHTML = '';
+            
+            // Previous button
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            const prevLink = document.createElement('a');
+            prevLink.className = 'page-link';
+            prevLink.href = '#';
+            prevLink.setAttribute('aria-label', 'Previous');
+            prevLink.innerHTML = '<span aria-hidden="true">&laquo;</span>';
+            prevLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (currentPage > 1) {
+                    goToPage(currentPage - 1);
+                }
+            });
+            prevLi.appendChild(prevLink);
+            paginationElement.appendChild(prevLi);
+            
+            // Page numbers
+            const maxVisiblePages = window.innerWidth < 768 ? 3 : 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const pageLi = document.createElement('li');
+                pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                const pageLink = document.createElement('a');
+                pageLink.className = 'page-link';
+                pageLink.href = '#';
+                pageLink.textContent = i;
+                pageLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    goToPage(i);
+                });
+                pageLi.appendChild(pageLink);
+                paginationElement.appendChild(pageLi);
+            }
+            
+            // Next button
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            const nextLink = document.createElement('a');
+            nextLink.className = 'page-link';
+            nextLink.href = '#';
+            nextLink.setAttribute('aria-label', 'Next');
+            nextLink.innerHTML = '<span aria-hidden="true">&raquo;</span>';
+            nextLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (currentPage < totalPages) {
+                    goToPage(currentPage + 1);
+                }
+            });
+            nextLi.appendChild(nextLink);
+            paginationElement.appendChild(nextLi);
+            
+            // Update showing info
+            const showingInfo = document.getElementById('showing-info');
+            if (showingInfo) {
+                const start = (currentPage - 1) * itemsPerPage + 1;
+                const end = Math.min(currentPage * itemsPerPage, totalDevices);
+                showingInfo.textContent = `Affichage de ${start}-${end} sur ${totalDevices} appareils`;
+            }
+        }
+        
+        // Go to specific page
+        function goToPage(page) {
+            currentPage = page;
+            
+            deviceRows.forEach(row => {
+                const rowPage = parseInt(row.getAttribute('data-page'));
+                row.style.display = rowPage === currentPage ? '' : 'none';
+            });
+            
+            generatePagination();
+        }
+        
+        // Initialize pagination if we have devices
+        if (totalDevices > 0) {
+            generatePagination();
+            goToPage(1);
+        }
+        
+        // Enhanced table filtering with pagination support
+        const tableFilter = document.getElementById('tableFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const clearSearchBtn = document.getElementById('clearSearch');
+        const tableRows = document.querySelectorAll('#dataTable tbody tr');
+        
+        function filterTable() {
+            const searchValue = tableFilter.value.toLowerCase();
+            const statusValue = statusFilter.value.toLowerCase();
+            
+            let visibleCount = 0;
+            let filteredRows = [];
+            
+            tableRows.forEach(row => {
+                if (row.querySelector('td[colspan]')) return; // Skip "no results" row
+                
+                const text = row.textContent.toLowerCase();
+                const statusCell = row.querySelector('td:nth-child(4)');
+                const statusText = statusCell ? statusCell.textContent.trim().toLowerCase() : '';
+                
+                const matchesSearch = searchValue === '' || text.includes(searchValue);
+                const matchesStatus = statusValue === '' || statusText === statusValue;
+                
+                const shouldShow = matchesSearch && matchesStatus;
+                
+                if (shouldShow) {
+                    visibleCount++;
+                    filteredRows.push(row);
+                }
+                
+                // Hide all rows initially
+                row.style.display = 'none';
+            });
+            
+            // Show "no results" message if needed
+            const noResultsRow = document.querySelector('#dataTable tbody tr[data-no-results]');
+            if (visibleCount === 0 && !noResultsRow) {
+                const tbody = document.querySelector('#dataTable tbody');
+                const newRow = document.createElement('tr');
+                newRow.setAttribute('data-no-results', 'true');
+                newRow.innerHTML = `
+                    <td colspan="9" class="text-center py-4 text-muted">
+                        <i class="fas fa-search me-2"></i>Aucun résultat trouvé
+                    </td>
+                `;
+                tbody.appendChild(newRow);
+                
+                // Hide pagination when no results
+                const paginationContainer = document.querySelector('.card-footer');
+                if (paginationContainer) {
+                    paginationContainer.style.display = 'none';
+                }
+            } else if (visibleCount > 0 && noResultsRow) {
+                noResultsRow.remove();
+                
+                // Show pagination when we have results
+                const paginationContainer = document.querySelector('.card-footer');
+                if (paginationContainer) {
+                    paginationContainer.style.display = '';
+                }
+                
+                // Update pagination for filtered results
+                filteredRows.forEach((row, index) => {
+                    row.setAttribute('data-page', Math.floor(index / itemsPerPage) + 1);
+                    row.style.display = Math.floor(index / itemsPerPage) + 1 === 1 ? '' : 'none';
+                });
+                
+                currentPage = 1;
+                generatePagination();
+            }
+        }
+        
+        // Rest of your existing JavaScript...
+    });
+</script>
 {% endblock %}
