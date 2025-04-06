@@ -452,5 +452,67 @@
             });
         });
     </script>
+    <script>
+        // إضافة دالة تصدير PDF
+        async function exportToPDF() {
+            // إظهار رسالة تحميل
+            const loadingDiv = document.createElement('div');
+            loadingDiv.style.position = 'fixed';
+            loadingDiv.style.top = '0';
+            loadingDiv.style.left = '0';
+            loadingDiv.style.width = '100%';
+            loadingDiv.style.height = '100%';
+            loadingDiv.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            loadingDiv.style.display = 'flex';
+            loadingDiv.style.justifyContent = 'center';
+            loadingDiv.style.alignItems = 'center';
+            loadingDiv.style.zIndex = '9999';
+            loadingDiv.innerHTML = '<div class="spinner-border text-light" role="status"><span class="visually-hidden">Chargement...</span></div>';
+            document.body.appendChild(loadingDiv);
+
+            try {
+                // إخفاء الأزرار قبل التصدير
+                const toolbar = document.querySelector('.toolbar');
+                toolbar.style.display = 'none';
+
+                // تحويل المحتوى إلى صورة
+                const container = document.querySelector('.container');
+                const canvas = await html2canvas(container, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    allowTaint: true
+                });
+
+                // إنشاء PDF بحجم A4
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                // حساب الأبعاد للحفاظ على النسب
+                const imgWidth = 210; // عرض A4 بالملليمتر
+                const pageHeight = 297; // ارتفاع A4 بالملليمتر
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                
+                // إضافة الصورة إلى PDF
+                const imgData = canvas.toDataURL('image/jpeg', 1.0);
+                pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+
+                // تحميل الملف
+                const filename = `maintenance_${document.querySelector('h5').textContent.split(':')[1].trim()}.pdf`;
+                pdf.save(filename);
+
+                // إعادة عرض الأزرار
+                toolbar.style.display = '';
+            } catch (error) {
+                console.error('Erreur lors de la création du PDF:', error);
+                alert('Une erreur est survenue lors de la création du PDF. Veuillez réessayer.');
+            } finally {
+                // إزالة رسالة التحميل
+                document.body.removeChild(loadingDiv);
+            }
+        }
+    </script>
+</body>
+</html>
 </body>
 </html>
