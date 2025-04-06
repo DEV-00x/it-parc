@@ -244,8 +244,8 @@ def generate_maintenance_reference(maintenance_date):
     numbers = []
     for ref in refs:
         try:
-            # Format is REF:XX/INF/YYYY
-            num_str = ref[0].split(':')[1].split('/')[0]
+            # Format is REF:XX/MM/INF/YYYY
+            num_str = ref[0].split('/')[0].split(':')[1]
             numbers.append(int(num_str))
         except (IndexError, ValueError):
             continue
@@ -255,12 +255,13 @@ def generate_maintenance_reference(maintenance_date):
     if numbers:
         next_num = max(numbers) + 1
     
-    reference = f"REF:{next_num:02d}/INF/{year}"
+    # Format: REF:00/MM/INF/YEAR (MM is two-digit month number)
+    reference = f"REF:{next_num:02d}/{month:02d}/INF/{year}"
     
     # Double check it's unique
     while MaintenanceRecord.query.filter_by(reference=reference).first():
         next_num += 1
-        reference = f"REF:{next_num:02d}/INF/{year}"
+        reference = f"REF:{next_num:02d}/{month:02d}/INF/{year}"
     
     return reference
 
